@@ -25,39 +25,39 @@
 
 module.exports = {
     // Recommended actions follow Basic Strategy, based on the rules currently in play
-    GetRecommendedPlayerAction: function(playerCards, dealerCard, handCount, rules, dealerCheckedBlackjack)
+    GetRecommendedPlayerAction: function(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
     {
         // If early surrender is allowed, check that now (that's what early surrender means - before dealer checks for blackjack
-        if ((rules.surrender == "early") && (ShouldPlayerSurrender(playerCards, dealerCard, handCount, rules)))
+        if ((options.surrender == "early") && (ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)))
         {
             return "surrender";
         }
 
         // OK, if an ace is showing it's easy - never take insurance
-        if ((dealerCard == 1) && !dealerCheckedBlackjack && rules.offerInsurance)
+        if ((dealerCard == 1) && !dealerCheckedBlackjack && options.offerInsurance)
         {
             return "noinsurance";    
         }
 
         // Check each situation
-        if (ShouldPlayerSplit(playerCards, dealerCard, handCount, rules))
+        if (ShouldPlayerSplit(playerCards, dealerCard, handCount, options))
         {
             return "split";
         }
-        else if (ShouldPlayerDouble(playerCards, dealerCard, handCount, rules))
+        else if (ShouldPlayerDouble(playerCards, dealerCard, handCount, options))
         {
             return "double";
         }
         // Note if early surrender is allowed we already checked, so no need to check again
-        else if ((rules.surrender != "early") && ShouldPlayerSurrender(playerCards, dealerCard, handCount, rules))
+        else if ((options.surrender != "early") && ShouldPlayerSurrender(playerCards, dealerCard, handCount, options))
         {
             return "surrender";
         }
-        else if (ShouldPlayerStand(playerCards, dealerCard, handCount, rules))
+        else if (ShouldPlayerStand(playerCards, dealerCard, handCount, options))
         {
             return "stand";
         }
-        else if (ShouldPlayerHit(playerCards, dealerCard, handCount, rules))
+        else if (ShouldPlayerHit(playerCards, dealerCard, handCount, options))
         {
             return "hit";
         }
@@ -95,12 +95,12 @@ function HandTotal(cards)
     return retval;
 }
 
-function ShouldPlayerSplit(playerCards, dealerCard, handCount, rules)
+function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
 {
     var shouldSplit = false;
 
     // It needs to be a possible action
-    if ((playerCards.length != 2) || (handCount == rules.maxSplitHands) || (playerCards[0] != playerCards[1]))
+    if ((playerCards.length != 2) || (handCount == options.maxSplitHands) || (playerCards[0] != playerCards[1]))
     {
         return false;
     }
@@ -115,15 +115,15 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, rules)
         case 2:
         case 3:
             // Against 4-7, or 2 and 3 if you can double after split
-            shouldSplit = ((dealerCard > 3) && (dealerCard < 8)) || (((dealerCard == 2) || (dealerCard == 3)) && (rules.doubleAfterSplit));
+            shouldSplit = ((dealerCard > 3) && (dealerCard < 8)) || (((dealerCard == 2) || (dealerCard == 3)) && (options.doubleAfterSplit));
             break;
         case 4:
             // Against 5 or 6, and only if you can double after split
-            shouldSplit = ((dealerCard == 5) || (dealerCard == 6)) && (rules.doubleAfterSplit);
+            shouldSplit = ((dealerCard == 5) || (dealerCard == 6)) && (options.doubleAfterSplit);
             break;
         case 6:
             // Split 3-6, or against a 2 if double after split is allowed
-            shouldSplit = ((dealerCard > 2) && (dealerCard < 7)) || ((dealerCard == 2) && (rules.doubleAfterSplit));
+            shouldSplit = ((dealerCard > 2) && (dealerCard < 7)) || ((dealerCard == 2) && (options.doubleAfterSplit));
             break;
         case 7:
             // Split on 2-7
@@ -131,7 +131,7 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, rules)
             break;
         case 8:
             // Always split 8s UNLESS the dealer has an ace and hits soft 17 and you can surrender (who knew)
-            shouldSplit = !((dealerCard == 1) && (rules.hitSoft17) && (rules.surrender != "none"));
+            shouldSplit = !((dealerCard == 1) && (options.hitSoft17) && (options.surrender != "none"));
             break;
         case 9:
             // Split against 2-9 except 7
@@ -147,21 +147,30 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, rules)
     return shouldSplit;
 }
 
-function ShouldPlayerDouble(playerCards, dealerCard, handCount, rules)
+function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
 {
     var shouldDouble = false;
     var handValue = HandTotal(playerCards);
+    const doubleRange = {low: 0, high: 0};
+
+    // Convert double option to range - eventually we may replace options.double string with a range for more flexibility
+    if (options.double == "any") {
+        doubleRange.low = 0;
+        doubleRange.high = 21;
+    } else if (options.double === "10or11") {
+        doubleRange.low = 10;
+        doubleRange.high = 11;
+    } else if (options.double === "9or10or11") {
+        doubleRange.low = 9;
+        doubleRange.high = 11;
+    }
 
     // It needs to be a possible action
-    if ((playerCards.length != 2) || ((handCount > 1) && !rules.doubleAfterSplit) || (rules.double == "none"))
+    if ((playerCards.length != 2) || ((handCount > 1) && !options.doubleAfterSplit))
     {
         return false;
     }
-    if ((rules.double == "9or10") && ((handValue.total < 9) || (handValue.total > 10)))
-    {
-        return false;
-    }
-    if ((rules.double == "9or10or11") && ((handValue.total < 9) || (handValue.total > 11)))
+    if ((handValue.total < doubleRange.low) || (handValue.total > doubleRange.high))
     {
         return false;
     }
@@ -188,11 +197,11 @@ function ShouldPlayerDouble(playerCards, dealerCard, handCount, rules)
                 break;
             case 18:
                 // Double against 3-6 - also 2 if the dealer hits soft 17
-                shouldDouble = (dealerCard >= 3 && (dealerCard <= 6)) || ((dealerCard == 2) && rules.hitSoft17);
+                shouldDouble = (dealerCard >= 3 && (dealerCard <= 6)) || ((dealerCard == 2) && options.hitSoft17);
                 break;
             case 19:
                 // Double against 6 if the dealer hits soft 17
-                shouldDouble = (dealerCard == 6) && rules.hitSoft17;
+                shouldDouble = (dealerCard == 6) && options.hitSoft17;
                 break;
             default:
                 // Don't double
@@ -214,7 +223,7 @@ function ShouldPlayerDouble(playerCards, dealerCard, handCount, rules)
                 break;
             case 11:
                 // Double anything except an ace (and then only if the dealer doesn't hit soft 17)
-                shouldDouble = !((dealerCard == 1) && !rules.hitSoft17);
+                shouldDouble = !((dealerCard == 1) && !options.hitSoft17);
                 break;
             default:
                 break;
@@ -226,12 +235,12 @@ function ShouldPlayerDouble(playerCards, dealerCard, handCount, rules)
 
 // Surrender rules - note we do not look at the exact composition of the hand
 // as defined as http://wizardofodds.com/games/blackjack/appendix/6/, only the player's total
-function ShouldPlayerSurrender(playerCards, dealerCard, handCount, rules)
+function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
 {
     var shouldSurrender = false;
 
     // You can only surrender on your first two cards, and it has to be an option
-    if (((rules.surrender != "early") && (rules.surrender != "late")) || (playerCards.length != 2) || (handCount != 1))
+    if (((options.surrender != "early") && (options.surrender != "late")) || (playerCards.length != 2) || (handCount != 1))
     {
         return false;
     }
@@ -244,7 +253,7 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, rules)
         return false;
     }
 
-    if (rules.surrender == "early")
+    if (options.surrender == "early")
     {
         if (dealerCard == 1)
         {
@@ -254,7 +263,7 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, rules)
             {
                 shouldSurrender = true;
             }
-            if ((playerCards[0].rank == 2) && (playerCards[1].rank == 2) && rules.hitSoft17)
+            if ((playerCards[0].rank == 2) && (playerCards[1].rank == 2) && options.hitSoft17)
             {
                 shouldSurrender = true;
             }
@@ -266,7 +275,7 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, rules)
             {
                 // UNLESS it's a pair of 8's in single deck and double after split is allowed
                 shouldSurrender = !((playerCards[0].rank == 8) && (playerCards[1].rank == 8) &&
-                            (rules.numberOfDecks == 1) && (rules.doubleaftersplit));
+                            (options.numberOfDecks == 1) && (options.doubleAfterSplit));
             }
         }
         else if (dealerCard == 9)
@@ -278,7 +287,7 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, rules)
             }
         }
     }
-    else if (rules.hitSoft17)
+    else if (options.hitSoft17)
     {
         switch (handValue.total)
         {
@@ -311,20 +320,20 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, rules)
         if (handValue.total == 15)
         {
             // Surrender against 10 unless it's a single deck game
-            shouldSurrender == ((dealerCard == 10) && (rules.numberOfDecks > 1));
+            shouldSurrender == ((dealerCard == 10) && (options.numberOfDecks > 1));
         }
         else if (handValue.total == 16)
         {
             // Surrender against 10 or Ace, and against 9 if there are more than 4 decks
             shouldSurrender = (playerCards[0].rank != 8) && ((dealerCard == 10) || (dealerCard == 1) 
-                        || ((dealerCard == 9) && (rules.numberOfDecks >= 4)));
+                        || ((dealerCard == 9) && (options.numberOfDecks >= 4)));
         }
     }
 
     return shouldSurrender;    
 }
 
-function ShouldPlayerStand(playerCards, dealerCard, handCount, rules)
+function ShouldPlayerStand(playerCards, dealerCard, handCount, options)
 {
     var shouldStand = false;
 
@@ -366,7 +375,7 @@ function ShouldPlayerStand(playerCards, dealerCard, handCount, rules)
     return shouldStand;    
 }
 
-function ShouldPlayerHit(playerCards, dealerCard, handCount, rules)
+function ShouldPlayerHit(playerCards, dealerCard, handCount, options)
 {
     // Note this is the last action we check (we told them not to do anything else), so by default you should hit
     // Since we don't have the full game state, it's assumed that the caller made sure not to call if the player

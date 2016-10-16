@@ -6,7 +6,7 @@ pass in different Rule variants as well.
 # Available variants
 
  * numberOfDecks - 1, 2, 4, 6, or 8
- * double - none, any, 9or10, or 9or10or11
+ * double - none, any, 10or11, or 9or10or11
  * maxSplitHands - the maximum number of hands a player can have (1=no splits allowed)
  * resplitAces - whether the player can resplit Aces (true or false)
  * doubleAfterSplit - whether the player can double after split (true or false)

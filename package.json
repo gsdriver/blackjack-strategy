@@ -1,5 +1,5 @@
 {
-  "name": "blackjack-suggest",
+  "name": "blackjack-strategy",
   "version": "1.0.0",
   "description": "provides a suggested action for a player based on Basic Strategy",
   "main": "src/Suggestion.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/gsdriver/blackjack-suggest"
+    "url": "https://github.com/gsdriver/blackjack-strategy"
   },
   "keywords": [
     "blackjack",
@@ -23,6 +23,6 @@
   "author": "Garrett Vargas <gsdriver@live.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gsdriver/blackjack-suggest/issues"
+    "url": "https://github.com/gsdriver/blackjack-strategy/issues"
   }
 }
