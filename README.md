@@ -12,4 +12,5 @@ pass in different Rule variants as well.
  * doubleAfterSplit - whether the player can double after split (true or false)
  * hitSoft17 - whether the dealer hits soft 17 or not
  * surrender - none, early, or late (early surrender means surrender is offered before the dealer checks for a blackjack)
+ * offerInsurance - whether insurance is offered or not
 
