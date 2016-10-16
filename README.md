@@ -1,4 +1,4 @@
-# blackjack-suggest
+# blackjack-strategy
 Nodejs module that provides suggested action for a blackjack hand.  It is intended to augment blackjack applications
 by teaching the player Basic Strategy, based on http://wizardofodds.com/games/blackjack/strategy/calculator/.  You can
 pass in different Rule variants as well.
@@ -13,4 +13,36 @@ pass in different Rule variants as well.
  * hitSoft17 - whether the dealer hits soft 17 or not
  * surrender - none, early, or late (early surrender means surrender is offered before the dealer checks for a blackjack)
  * offerInsurance - whether insurance is offered or not
+ 
+# Usage
+
+The exposed function from this librayr is `GetRecommendedPlayerAction` which will return a string suggesting an action for the player to take on their hand.
+
+```
+GetRecommendedPlayerAction(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
+```
+
+The arguments to  `GetRecommendedPlayerAction` are:
+
+ * playerCards - an array of integer values of the card, from 1-10 (1=Ace, all face cards should be 10)
+ * dealerCard - an integer representing the value of the dealer's up card
+ * handCount - the total number of hands the player has in play, usually 1 unless the player has split
+ * dealerCheckedBlackjack - a Boolean indicating whether the dealer has checked for Blackjack yet or not
+ * options - an object containing information about the rules of the game and the complexity of Basic Strategy suggestion desired
+ 
+The options structure is composed of the following fields with the following default values:
+
+```
+{
+    hitSoft17:true,             // Does dealer hit soft 17
+    surrender:"late",           // Surrender offered - none, late, or early
+    double:"any",               // Double rules - none, 10or11, 9or10or11, any
+    doubleAfterSplit:true,      // Can double after split - none, 10or11, 9or10or11, any
+    resplitAces:false,          // Can you resplit aces
+    offerInsurance:true,        // Insurance is offered
+    numberOfDecks:6,            // Number of decks in play
+    maxSplitHands:4,            // Maximum number of hands you can have due to splits
+    strategyComplexity:"basic"  // basic, advanced, or exactComposition - how closely Basic Strategy is followed (basic is simpler to remember but less precise rules, advanced is a higher standard, and exactComposition is the most advanced, returning optimal strategy looking at the card-by-card make-up of the player's hand)
+}
+```
 
