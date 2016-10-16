@@ -15,9 +15,14 @@
     "basic strategy",
     "games"
   ],
+  "directories": {
+    "doc": ".",
+    "test": "test",
+    "lib": "src"
+  },
   "author": "Garrett Vargas <gsdriver@live.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/gsdriver/blackjack-suggest/issues"
-  },
+  }
 }
