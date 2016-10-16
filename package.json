@@ -2,7 +2,7 @@
   "name": "blackjack-suggest",
   "version": "1.0.0",
   "description": "provides a suggested action for a player based on Basic Strategy",
-  "main": "Suggestion.js",
+  "main": "src/Suggestion.js",
   "scripts": {
     "test": "node test/suggestion.spec.js"
   },

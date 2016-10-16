@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-const lib = require('../suggestion');
+const lib = require('../src/suggestion');
 
 const defaultRules = {
     hitSoft17:true,          // Does dealer hit soft 17
