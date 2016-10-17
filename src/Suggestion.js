@@ -508,8 +508,9 @@ function ShouldPlayerStand(playerCards, dealerCard, handCount, options)
         }
         else if (handValue.total == 18)
         {
-            // Stand against dealer 2-8
-            shouldStand = (handValue.total >= 2) && (handValue.total <= 8);
+            // Stand against dealer 2-8, and against a dealer Ace in single deck if they dealer will stand on soft 17
+            shouldStand = ((dealerCard >= 2) && (dealerCard <= 8)) ||
+                        ((dealerCard == 1) && (options.numberOfDecks == 1) && !options.hitSoft17);
         }
     }
     else
