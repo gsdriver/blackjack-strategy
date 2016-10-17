@@ -19,7 +19,8 @@ pass in different Rule variants as well.
 The exposed function from this librayr is `GetRecommendedPlayerAction` which will return a string suggesting an action for the player to take on their hand.
 
 ```
-GetRecommendedPlayerAction(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
+GetRecommendedPlayerAction(playerCards, dealerCard, handCount, 
+                            dealerCheckedBlackjack, options)
 ```
 
 The arguments to  `GetRecommendedPlayerAction` are:
@@ -59,10 +60,12 @@ const lib = require("blackjack-strategy");
 lib.GetRecommendedPlayerAction([2,3,6], 6, 1, true, null);
 
 // Pair of 8s against dealer Ace - an advanced Strategy option should "surrender"
-lib.GetRecommendedPlayerAction([8,8], 1, 1, true, {strategyComplexity: "advanced"});
+lib.GetRecommendedPlayerAction([8,8], 1, 1, true, 
+                    {strategyComplexity: "advanced"});
 
 // 10-7 against dealer Ace single deck should "surrender"
-lib.GetRecommendedPlayerAction([7,10], 1, 1, true, {numberOfDecks:1, strategyComplexity: "exactComposition"});
+lib.GetRecommendedPlayerAction([7,10], 1, 1, true, 
+                    {numberOfDecks:1, strategyComplexity: "exactComposition"});
 ```
 
 # Contributing - bug fixes
