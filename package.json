@@ -1,6 +1,6 @@
 {
   "name": "blackjack-strategy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "provides a suggested action for a player based on Basic Strategy",
   "main": "src/Suggestion.js",
   "scripts": {
