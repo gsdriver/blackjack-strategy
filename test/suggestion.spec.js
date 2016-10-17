@@ -56,6 +56,8 @@ RunTest("Three-card 11 against 6", [2,3,6], 6, 1, true, null, "hit");
 // Some single deck cases
 RunTest("Split 6s against dealer 2", [6,6], 2, 1, true, {numberOfDecks:1, doubleAfterSplit:false}, "split");
 RunTest("Split 9s against Ace single deck", [9,9], 1, 1, true, {strategyComplexity:"advanced", numberOfDecks:1, doubleAfterSplit:true}, "split");
+RunTest("Double 8 against dealer 5 single deck", [3,5], 5, 1, true, {numberOfDecks:1, doubleAfterSplit:false}, "double");
+RunTest("Hit 8 against dealer 5 single deck if can't double", [3,5], 5, 1, true, {numberOfDecks:1, double:"9or10or11"}, "hit");
 
 // Advanced strategy
 RunTest("Surrender pair of 8s against dealer Ace", [8,8], 1, 1, true, {strategyComplexity: "advanced"}, "surrender");

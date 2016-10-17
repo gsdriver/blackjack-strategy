@@ -281,16 +281,16 @@ function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
                 shouldDouble = (dealerCard >= 4) && (dealerCard <= 6);
                 break;
             case 17:
-                // Double against 3-6
-                shouldDouble = (dealerCard >= 3) && (dealerCard <= 6);
+                // Double against 3-6, and against 2 in single deck
+                shouldDouble = ((dealerCard >= 3) && (dealerCard <= 6)) || ((dealerCard == 2) && (options.numberOfDecks == 1));
                 break;
             case 18:
-                // Double against 3-6 - also 2 if the dealer hits soft 17
-                shouldDouble = (dealerCard >= 3 && (dealerCard <= 6)) || ((dealerCard == 2) && options.hitSoft17);
+                // Double against 3-6 - also 2 if the dealer hits soft 17 and there is more than one deck
+                shouldDouble = ((dealerCard >= 3) && (dealerCard <= 6)) || ((dealerCard == 2) && options.hitSoft17 && (options.numberOfDecks > 1));
                 break;
             case 19:
-                // Double against 6 if the dealer hits soft 17
-                shouldDouble = (dealerCard == 6) && options.hitSoft17;
+                // Double against 6 if the dealer hits soft 17, or always in single deck
+                shouldDouble = (dealerCard == 6) && (options.hitSoft17 || (options.numberOfDecks == 1));
                 break;
             default:
                 // Don't double
@@ -299,20 +299,24 @@ function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
     }
     else
     {
-        // Double on 9, 10, or 11 only
+        // Double on 9, 10, or 11 only (8 in single deck)
         switch (handValue.total)
         {
+            case 8:
+                // Double 5-6 in single deck
+                shouldDouble = ((dealerCard >= 5) && (dealerCard <= 6) && (options.numberOfDecks == 1));
+                break;
             case 9:
-                // Double 3-6
-                shouldDouble = (dealerCard >= 3) && (dealerCard <= 6);
+                // Double 3-6, and 2 in single or double deck
+                shouldDouble = ((dealerCard >= 3) && (dealerCard <= 6)) || ((dealerCard == 2) && (options.numberOfDecks <= 2));
                 break;
             case 10:
                 // Double 2-9
                 shouldDouble = (dealerCard >= 2) && (dealerCard <= 9);
                 break;
             case 11:
-                // Double anything except an ace (and then only if the dealer doesn't hit soft 17)
-                shouldDouble = !((dealerCard == 1) && !options.hitSoft17);
+                // Double anything except an ace (and then only if the dealer doesn't hit soft 17 or it's single or double deck)
+                shouldDouble = !((dealerCard == 1) && (!options.hitSoft17 || (options.numberOfDecks <= 2)));
                 break;
             default:
                 break;
