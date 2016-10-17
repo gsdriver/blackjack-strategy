@@ -56,5 +56,10 @@ RunTest("Double soft 17 against 6", [1,6], 6, 2, true, null, "double");
 RunTest("Surrender pair of 8s against dealer Ace", [8,8], 1, 1, true, {strategyComplexity: "advanced"}, "surrender");
 RunTest("Early Surrender pair of 8s against dealer 10 single deck", [8,8], 10, 1, false, {numberOfDecks:1, surrender:"early", strategyComplexity: "advanced"}, "surrender");
 
+// Exact Composition tests
+RunTest("Hit pair of 7s against dealer 10 single deck", [7,7], 10, 1, true, {numberOfDecks:1}, "hit");
+RunTest("Surrender pair of 7s against dealer 0 single deck with exact composition", [7,7], 10, 1, true, {numberOfDecks:1, strategyComplexity:"exactComposition"}, "surrender");
+RunTest("Surrender 10-7 against dealer Ace single deck", [7,10], 1, 1, true, {numberOfDecks:1, strategyComplexity: "exactComposition"}, "surrender");
+
 // Final summary
 console.log("\r\nRan " + (succeeded + failed) + " tests; " + succeeded + " passed and " + failed + " failed");

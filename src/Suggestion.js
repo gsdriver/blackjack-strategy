@@ -180,9 +180,9 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
             shouldSplit = ((dealerCard > 1) && (dealerCard < 8));
             break;
         case 8:
-            // Always split 8s UNLESS the dealer has an ace and hits soft 17 and you can surrender (who knew)
-            // This is considered an advanced option, so if the complexity asked for is basic we will say "always split 8s"
-            shouldSplit = (options.strategyComplexity == "basic") || !((dealerCard == 1) && (options.hitSoft17) && (options.surrender != "none"));
+            // The basic rule is always split 8s - there are exceptions where we will surrender instead, which are covered in 
+            // the case where the player should surrender.  Check if they should surrender, if not they should split
+            shouldSplit = !ShouldPlayerSurrender(playerCards, dealerCard, handCount, options);
             break;
         case 9:
             // Split against 2-9 except 7
@@ -332,7 +332,20 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
                 }
                 else
                 {
-                    shouldSurender = true;
+                    // Surrender unless we're looking at an exact composition - then don't surrender 10/4 or 5/9 in single deck, or 4/10 in double deck
+                    shouldSurrender = true;
+                    if ((handValue.total == 14) && (options.strategyComplexity == "exactComposition"))
+                    {
+                        if ((options.numberOfDecks == 1) && 
+                            ((playerCards[0] == 4) || (playerCards[0] == 5) || (playerCards[0] == 9) || (playerCards[0] == 10)))
+                        {
+                            shouldSurrender = false;        
+                        }
+                        if ((options.numberOfDecks == 2) && ((playerCards[0] == 4) || (playerCards[0] == 10)))
+                        {
+                            shouldSurrender = false;
+                        }
+                    }
                 }
             }
         }
@@ -345,46 +358,82 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
             }
         }
     }
-    else if (options.hitSoft17)
+    // Late surrender against an Ace when dealer hits on soft 17
+    else if ((options.hitSoft17) && (dealerCard == 1))
     {
         switch (handValue.total)
         {
+            case 14:
+                // If looking at exact composition, then surrender a pair of 7s in a single deck game only
+                shouldSurrender = ((options.strategyComplexity == "exactComposition") && (options.numberOfDecks == 1) && (playerCards[0] == 7));
+                break;
             case 15:
-                // Surrender against 10 or Ace
-                shouldSurrender = (dealerCard == 10) || (dealerCard == 1);
+                // Surrender, unless we are looking at exact composition, then single or double deck 8/7 doesn't surrender
+                shouldSurrender = !((options.strategyComplexity == "exactComposition") && (options.numberOfDecks <= 2) &&
+                    ((playerCards[0] == 8) || (playerCards[0] == 7)));
+                break;
             case 16:
-                // Surrender against 9-Ace unless it's a pair of 8s in which case only against ace
-                if (dealerCard == 1)
+                // Surrender unless it's a pair of 8s in a single deck game or a double deck game with no double after split
+                // This is an advanced option (basic is "always split 8s")
+                shouldSurrender = (playerCards[0] != 8);
+                if ((options.strategyComplexity != "basic") && (playerCards[0] == 8))
                 {
-                    shouldSurrender = true;
-                }
-                else
-                {
-                    shouldSurrender = (playerCards[0] != 8) && ((dealerCard == 9) || (dealerCard == 10));
+                    // Surrender pair of 8s if four or more decks or in a double-deck game where double after split isn't allowed
+                    if ((options.numberOfDecks >= 4) || ((options.numberOfDecks == 2) && !options.doubleAfterSplit))
+                    {
+                        shouldSurrender = true;
+                    }
                 }
                 break;
             case 17:
-                // Surrender against ace
-                shouldSurrender = (dealerCard == 1);
+                // Surrender unless you are looking at exact composition, in which case a single-deck game should only surrender
+                // 17 against Ace if it is a 10/7 hand
+                shouldSurrender = true;
+                if ((options.strageyComplexity == "exactComposition") && (options.numberOfDecks == 1))
+                {
+                    shouldSurrender = ((playerCards[0] == 10) || (playerCards[0] == 7));
+                }
                 break;
             default:
                 // Don't surender
                 break;
         }
     }
+    // Late surrender against an Ace, dealer doesn't hit soft 17
+    else if (dealerCard == 1)
+    {
+        // We only surrender a 16 in this case (not a pair of 8s).  Unless it is single deck, in which case only 10/6 surrenders
+        shouldSurrender = (handValue.total == 16) && (playerCards[0] != 8);
+        if (shouldSurrender)
+        {
+            if ((options.strategyComplexity == "exactComposition") && (options.numberOfDecks == 1) && ((playerCards[0] == 10) || (playerCards[0] == 6)))
+            {
+                shouldSurrender = false;
+            }
+        }
+    }
+    // Late surrender against a non-Ace
     else
     {
-        // We're less likely to surrender - 15 against 10, 16 (non-8s) against 9-Ace
-        if (handValue.total == 15)
+        // The basic rule is 15 against 10 if more than one deck, and 16 (non-8s) against 10 always or against 9 if 4 or more decks
+        // If looking at advanced composition, 7s surrender against 10 in single deck and 8/7 against 10 doesn't surrender
+        if (handValue.total == 14)
+        {
+            shouldSurrender = ((options.strategyComplexity == "exactComposition") && (playerCards[0] == 7) && (dealerCard == 10) && (options.numberOfDecks == 1));
+        }
+        else if (handValue.total == 15)
         {
             // Surrender against 10 unless it's a single deck game
-            shouldSurrender == ((dealerCard == 10) && (options.numberOfDecks > 1));
+            shouldSurrender = ((dealerCard == 10) && (options.numberOfDecks > 1));
+            if ((options.strategyComplexity == "exactComposition") && (dealerCard == 10) && ((playerCards[0] == 8) || (playerCards[0] == 7)))
+            {
+                shouldSurrender = false;
+            }
         }
         else if (handValue.total == 16)
         {
             // Surrender against 10 or Ace, and against 9 if there are more than 4 decks
-            shouldSurrender = (playerCards[0] != 8) && ((dealerCard == 10) || (dealerCard == 1) 
-                        || ((dealerCard == 9) && (options.numberOfDecks >= 4)));
+            shouldSurrender = (playerCards[0] != 8) && ((dealerCard == 10) || ((dealerCard == 9) && (options.numberOfDecks >= 4)));
         }
     }
 
