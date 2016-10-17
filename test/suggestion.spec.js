@@ -51,6 +51,11 @@ RunTest("Split pair of 8s against dealer Ace - basic", [8,8], 1, 1, true, null, 
 RunTest("Surrender 15 against dealer 10",[10,5], 10, 1, true, null, "surrender");
 RunTest("No insurance ever", [10,1], 1, 1, false, null, "noinsurance");
 RunTest("Double soft 17 against 6", [1,6], 6, 2, true, null, "double");
+RunTest("Three-card 11 against 6", [2,3,6], 6, 1, true, null, "hit");
+
+// Some single deck cases
+RunTest("Split 6s against dealer 2", [6,6], 2, 1, true, {numberOfDecks:1, doubleAfterSplit:false}, "split");
+RunTest("Split 9s against Ace single deck", [9,9], 1, 1, true, {strategyComplexity:"advanced", numberOfDecks:1, doubleAfterSplit:true}, "split");
 
 // Advanced strategy
 RunTest("Surrender pair of 8s against dealer Ace", [8,8], 1, 1, true, {strategyComplexity: "advanced"}, "surrender");
@@ -58,7 +63,7 @@ RunTest("Early Surrender pair of 8s against dealer 10 single deck", [8,8], 10, 1
 
 // Exact Composition tests
 RunTest("Hit pair of 7s against dealer 10 single deck", [7,7], 10, 1, true, {numberOfDecks:1}, "hit");
-RunTest("Surrender pair of 7s against dealer 0 single deck with exact composition", [7,7], 10, 1, true, {numberOfDecks:1, strategyComplexity:"exactComposition"}, "surrender");
+RunTest("Surrender pair of 7s against dealer 10 single deck with exact composition", [7,7], 10, 1, true, {numberOfDecks:1, strategyComplexity:"exactComposition"}, "surrender");
 RunTest("Surrender 10-7 against dealer Ace single deck", [7,10], 1, 1, true, {numberOfDecks:1, strategyComplexity: "exactComposition"}, "surrender");
 
 // Final summary

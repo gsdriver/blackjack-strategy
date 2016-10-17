@@ -121,6 +121,13 @@ function ExtractOptions(options)
 
     return playerOptions;
 }
+
+// 
+// HandTotal
+// 
+// Determines what the total of a hand should be, and whether that total is "soft" or not
+//
+
 function HandTotal(cards) 
 {
     var retval = { total: 0, soft: false };
@@ -145,6 +152,10 @@ function HandTotal(cards)
     return retval;
 }
 
+//
+// Split strategy
+//
+
 function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
 {
     var shouldSplit = false;
@@ -163,21 +174,39 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
             shouldSplit = true;
             break;
         case 2:
+            // Against 4-7, or 2 and 3 if you can double after split; also against a dealer 3 in single deck
+            shouldSplit = ((dealerCard > 3) && (dealerCard < 8)) || (((dealerCard == 2) || (dealerCard == 3)) && (options.doubleAfterSplit));
+            if ((dealerCard == 3) && (options.numberOfDecks == 1))
+            {
+                shouldSplit = true;
+            }
+            break;
         case 3:
             // Against 4-7, or 2 and 3 if you can double after split
             shouldSplit = ((dealerCard > 3) && (dealerCard < 8)) || (((dealerCard == 2) || (dealerCard == 3)) && (options.doubleAfterSplit));
             break;
         case 4:
             // Against 5 or 6, and only if you can double after split
-            shouldSplit = ((dealerCard == 5) || (dealerCard == 6)) && (options.doubleAfterSplit);
+            // Or against a 4 in single deck, if you can double after split
+            shouldSplit = ((dealerCard == 5) || (dealerCard == 6) || ((dealerCard == 4) && (options.numberOfDecks == 1))) && (options.doubleAfterSplit);
             break;
         case 6:
-            // Split 3-6, or against a 2 if double after split is allowed
-            shouldSplit = ((dealerCard > 2) && (dealerCard < 7)) || ((dealerCard == 2) && (options.doubleAfterSplit));
+            // Split 3-6, or against a 2 if double after split is allowed (for four or more decks, always for one or two decks)
+            // Or in single or double deck, against a 7 if double after split is allowed
+            shouldSplit = ((dealerCard > 2) && (dealerCard < 7)) || 
+                    ((dealerCard == 2) && (((options.numberOfDecks >= 4) && options.doubleAfterSplit) || (options.numberOfDecks <= 2)));
+            if ((options.numberOfDecks == 1) && (dealerCard == 7) && options.doubleAfterSplit)
+            {
+                shouldSplit = true;
+            }
             break;
         case 7:
-            // Split on 2-7
+            // Split on 2-7, but on single or double deck split on 7s only if you can double after split
             shouldSplit = ((dealerCard > 1) && (dealerCard < 8));
+            if ((dealerCard == 7) && (options.numberOfDecks <= 2))
+            {
+                shouldSplit = options.doubleAfterSplit;
+            }
             break;
         case 8:
             // The basic rule is always split 8s - there are exceptions where we will surrender instead, which are covered in 
@@ -186,7 +215,12 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
             break;
         case 9:
             // Split against 2-9 except 7
+            // An advanced exception - 9s should split against an ace in single deck if dealer has an ace and you can double after split
             shouldSplit = ((dealerCard > 1) && (dealerCard < 10) && (dealerCard != 7));
+            if ((options.strategyComplexity != "basic") && (dealerCard == 1) && (options.numberOfDecks == 1) && (options.doubleAfterSplit))
+            {
+                shouldSplit = true;
+            }
             break;
         case 5:
         case 10:
@@ -197,6 +231,10 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
 
     return shouldSplit;
 }
+
+//
+// Double strategy
+//
 
 function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
 {
@@ -284,8 +322,13 @@ function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
     return shouldDouble;
 }
 
-// Surrender rules - note we do not look at the exact composition of the hand
-// as defined as http://wizardofodds.com/games/blackjack/appendix/6/, only the player's total
+// 
+// Surrender strategy
+//
+// This is fairly complex and handles different strategies for early or late surrender
+// It also looks at various combinations of player hands for more advanced strategy complexities
+//
+
 function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
 {
     var shouldSurrender = false;
@@ -440,11 +483,16 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
     return shouldSurrender;    
 }
 
+//
+// Stand Strategy
+//
+// Note that we've already checkd other actions such as double, split, and surrender
+// So at this point we're only assessing whether you should stand as opposed to hitting
+//
+
 function ShouldPlayerStand(playerCards, dealerCard, handCount, options)
 {
     var shouldStand = false;
-
-    // Nnote this is last action so we already told them not to double/surrender/etc
     var handValue = HandTotal(playerCards);
 
     if (handValue.soft)
@@ -482,11 +530,16 @@ function ShouldPlayerStand(playerCards, dealerCard, handCount, options)
     return shouldStand;    
 }
 
+//
+// Hit strategy
+//
+// Note this is the last action we check (we told them not to do anything else), so by default you should hit
+// Since we don't have the full game state, it's assumed that the caller made sure not to call if the player
+// took an action where the player has no choice of play (e.g. doubled or split aces)
+//
+
 function ShouldPlayerHit(playerCards, dealerCard, handCount, options)
 {
-    // Note this is the last action we check (we told them not to do anything else), so by default you should hit
-    // Since we don't have the full game state, it's assumed that the caller made sure not to call if the player
-    // took an action where the player has no choice of play (e.g. doubled or split aces)
     // The only sanity check we'll do is that you haven't already busted
     var handValue = HandTotal(playerCards);
     return (handValue.total < 21);
