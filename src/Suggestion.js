@@ -333,7 +333,7 @@ function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
                 break;
             case 11:
                 // Double anything except an ace (and then only if the dealer doesn't hit soft 17 or there are more than two decks)
-                shouldDouble = !((dealerCard == 1) && (!options.hitSoft17 || (options.numberOfDecks > 2)));
+                shouldDouble = !((dealerCard == 1) && !options.hitSoft17 && (options.numberOfDecks > 2));
                 break;
             default:
                 break;
