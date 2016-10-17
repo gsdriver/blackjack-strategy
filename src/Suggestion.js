@@ -74,7 +74,7 @@ module.exports = {
 
 function ExtractOptions(options)
 {
-    const playerOptions = { hitSoft17: true, surrender: "late", double: "any", doubleAfterSplit: true, 
+    const playerOptions = { hitSoft17: true, surrender: "late", doubleRange:[0,21], doubleAfterSplit: true, 
                             resplitAces: false, offerInsurance: true, numberOfDecks: 6, maxSplitHands: 4, 
                             strategyComplexity: "basic"};
 
@@ -88,10 +88,6 @@ function ExtractOptions(options)
         if (options.hasOwnProperty("surrender"))
         {
             playerOptions.surrender = options.surrender;
-        }
-        if (options.hasOwnProperty("double"))
-        {
-            playerOptions.double = options.double;
         }
         if (options.hasOwnProperty("doubleAfterSplit"))
         {
@@ -116,6 +112,31 @@ function ExtractOptions(options)
         if (options.hasOwnProperty("strategyComplexity"))
         {
             playerOptions.strategyComplexity = options.strategyComplexity;
+        }
+
+        // Double rules - make sure doubleRange is set as that is all we use here
+        if (options.hasOwnProperty("doubleRange"))
+        {
+            playerOptions.doubleRange = options.doubleRange;
+        }
+        else if (options.hasOwnProperty("double"))
+        {
+            // Translate to doubleRange
+            if (options.double == "none") 
+            {
+                playerOptions.doubleRange.low = 0;
+                playerOptions.doubleRange.high = 0;
+            } 
+            else if (options.double === "10or11") 
+            {
+                playerOptions.doubleRange.low = 10;
+                playerOptions.doubleRange.high = 11;
+            } 
+            else if (options.double === "9or10or11") 
+            {
+                playerOptions.doubleRange.low = 9;
+                playerOptions.doubleRange.high = 11;
+            }
         }
     }
 
@@ -240,26 +261,13 @@ function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
 {
     var shouldDouble = false;
     var handValue = HandTotal(playerCards);
-    const doubleRange = {low: 0, high: 0};
-
-    // Convert double option to range - eventually we may replace options.double string with a range for more flexibility
-    if (options.double == "any") {
-        doubleRange.low = 0;
-        doubleRange.high = 21;
-    } else if (options.double === "10or11") {
-        doubleRange.low = 10;
-        doubleRange.high = 11;
-    } else if (options.double === "9or10or11") {
-        doubleRange.low = 9;
-        doubleRange.high = 11;
-    }
 
     // It needs to be a possible action
     if ((playerCards.length != 2) || ((handCount > 1) && !options.doubleAfterSplit))
     {
         return false;
     }
-    if ((handValue.total < doubleRange.low) || (handValue.total > doubleRange.high))
+    if ((handValue.total < options.doubleRange[0]) || (handValue.total > options.doubleRange[1]))
     {
         return false;
     }

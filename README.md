@@ -37,12 +37,14 @@ The options structure is composed of the following fields with the following def
     hitSoft17:true,             // Does dealer hit soft 17
     surrender:"late",           // Surrender offered - none, late, or early
     double:"any",               // Double rules - none, 10or11, 9or10or11, any
-    doubleAfterSplit:true,      // Can double after split - none, 10or11, 9or10or11, any
+    doubleRange:[0,21],         // Range of values you can double, 
+                                // if set supercedes double (v1.1 or higher)
+    doubleAfterSplit:true,      // Can double after split
     resplitAces:false,          // Can you resplit aces
-    offerInsurance:true,        // Insurance is offered
+    offerInsurance:true,        // Is insurance offered
     numberOfDecks:6,            // Number of decks in play
-    maxSplitHands:4,            // Maximum number of hands you can have due to splits
-    strategyComplexity:"basic"  // basic, advanced, or exactComposition - how closely Basic Strategy is followed
+    maxSplitHands:4,            // Max number of hands you can have due to splits
+    strategyComplexity:"basic"  // basic, advanced, or exactComposition (see below)
 }
 ```
 
@@ -52,16 +54,15 @@ Some example cases:
 
 ```
 const lib = require("blackjack-strategy");
-var result;
 
-// Hit a three-card 11 against a dealer 6
-result = lib.GetRecommendedPlayerAction([2,3,6], 6, 1, true, null);
+// Hit a three-card 11 against a dealer 6 should return "hit"
+lib.GetRecommendedPlayerAction([2,3,6], 6, 1, true, null);
 
-// Surrender pair of 8s against dealer Ace - an advanced Strategy option
-result = lib.GetRecommendedPlayerAction([8,8], 1, 1, true, {strategyComplexity: "advanced"});
+// Pair of 8s against dealer Ace - an advanced Strategy option should "surrender"
+lib.GetRecommendedPlayerAction([8,8], 1, 1, true, {strategyComplexity: "advanced"});
 
-// Surrender 10-7 against dealer Ace single deck
-result = lib.GetRecommendedPlayerAction([7,10], 1, 1, true, {numberOfDecks:1, strategyComplexity: "exactComposition"});
+// 10-7 against dealer Ace single deck should "surrender"
+lib.GetRecommendedPlayerAction([7,10], 1, 1, true, {numberOfDecks:1, strategyComplexity: "exactComposition"});
 ```
 
 # Contributing - bug fixes
