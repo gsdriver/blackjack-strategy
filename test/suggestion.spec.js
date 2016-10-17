@@ -58,9 +58,17 @@ function RunTest(testName, playerCards, dealerCard, handCount, dealerCheckedBlac
 RunTest("Stand on 16 against dealer 3", [9,7], 3, 1, true, defaultOptions, "stand");
 RunTest("Split 9s against dealer 5", [9,9], 5, 1, true, defaultOptions, "split");
 RunTest("Hit 16 against 10 after split", [9,7], 10, 2, true, defaultOptions, "hit");
-RunTest("Surrender pair of 8s against dealer Ace", [8,8], 1, 1, true, defaultOptions, "surrender");
+RunTest("Split pair of 8s against dealer Ace - basic", [8,8], 1, 1, true, defaultOptions, "split");
+RunTest("Surrender 15 against dealer 10",[10,5], 10, 1, true, defaultOptions, "surrender");
 RunTest("No insurance ever", [10,1], 1, 1, false, defaultOptions, "noinsurance");
 RunTest("Double soft 17 against 6", [1,6], 6, 2, true, defaultOptions, "double");
+
+// Advanced strategy
+defaultOptions.strategyComplexity = "advanced";
+RunTest("Surrender pair of 8s against dealer Ace", [8,8], 1, 1, true, defaultOptions, "surrender");
+defaultOptions.numberOfDecks = 1;
+defaultOptions.surrender = "early";
+RunTest("Early Surrender pair of 8s against dealer 10 single deck", [8,8], 10, 1, false, defaultOptions, "surrender");
 
 // Final summary
 console.log("\r\nRan " + (succeeded + failed) + " tests; " + succeeded + " passed and " + failed + " failed");

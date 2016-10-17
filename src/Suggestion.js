@@ -131,7 +131,8 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
             break;
         case 8:
             // Always split 8s UNLESS the dealer has an ace and hits soft 17 and you can surrender (who knew)
-            shouldSplit = !((dealerCard == 1) && (options.hitSoft17) && (options.surrender != "none"));
+            // This is considered an advanced option, so if the complexity asked for is basic we will say "always split 8s"
+            shouldSplit = (options.strategyComplexity == "basic") || !((dealerCard == 1) && (options.hitSoft17) && (options.surrender != "none"));
             break;
         case 9:
             // Split against 2-9 except 7
@@ -263,7 +264,7 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
             {
                 shouldSurrender = true;
             }
-            if ((playerCards[0].rank == 2) && (playerCards[1].rank == 2) && options.hitSoft17)
+            if ((playerCards[0] == 2) && (playerCards[1] == 2) && options.hitSoft17)
             {
                 shouldSurrender = true;
             }
@@ -274,8 +275,15 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
             if ((handValue.total >= 14) && (handValue.total <= 16))
             {
                 // UNLESS it's a pair of 8's in single deck and double after split is allowed
-                shouldSurrender = !((playerCards[0].rank == 8) && (playerCards[1].rank == 8) &&
-                            (options.numberOfDecks == 1) && (options.doubleAfterSplit));
+                // This is an advanced option (for basic, we will "always split 8s")
+                if ((playerCards[0] == 8) && (playerCards[1] == 8))
+                {
+                    shouldSurrender = (options.strategyComplexity != "basic") && (options.numberOfDecks == 1) && (options.doubleAfterSplit);
+                }
+                else
+                {
+                    shouldSurender = true;
+                }
             }
         }
         else if (dealerCard == 9)
