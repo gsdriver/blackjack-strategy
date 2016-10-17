@@ -22,6 +22,10 @@
  * SOFTWARE.
  */
 
+// Known cases that need to be implemented:
+//   Pair of 7s against dealer 10 in single deck should surrender or stand
+//   All of the exactComposition appendices except for appendix 6 (surrender)
+
 module.exports = {
     // Recommended actions follow Basic Strategy, based on the rules currently in play
     GetRecommendedPlayerAction: function(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
@@ -204,7 +208,12 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
             break;
         case 3:
             // Against 4-7, or 2 and 3 if you can double after split
+            // Also in single deck against an 8 if you can double after split
             shouldSplit = ((dealerCard > 3) && (dealerCard < 8)) || (((dealerCard == 2) || (dealerCard == 3)) && (options.doubleAfterSplit));
+            if ((dealerCard == 8) && (options.numberOfDecks == 1) && (options.doubleAfterSplit))
+            {
+                shouldSplit = true;
+            }
             break;
         case 4:
             // Against 5 or 6, and only if you can double after split
@@ -222,9 +231,9 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
             }
             break;
         case 7:
-            // Split on 2-7, but on single or double deck split on 7s only if you can double after split
+            // Split on 2-7, and on single or double deck split against an 8 only if you can double after split
             shouldSplit = ((dealerCard > 1) && (dealerCard < 8));
-            if ((dealerCard == 7) && (options.numberOfDecks <= 2))
+            if ((dealerCard == 8) && (options.numberOfDecks <= 2))
             {
                 shouldSplit = options.doubleAfterSplit;
             }
@@ -323,8 +332,8 @@ function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
                 shouldDouble = (dealerCard >= 2) && (dealerCard <= 9);
                 break;
             case 11:
-                // Double anything except an ace (and then only if the dealer doesn't hit soft 17 or it's single or double deck)
-                shouldDouble = !((dealerCard == 1) && (!options.hitSoft17 || (options.numberOfDecks <= 2)));
+                // Double anything except an ace (and then only if the dealer doesn't hit soft 17 or there are more than two decks)
+                shouldDouble = !((dealerCard == 1) && (!options.hitSoft17 || (options.numberOfDecks > 2)));
                 break;
             default:
                 break;

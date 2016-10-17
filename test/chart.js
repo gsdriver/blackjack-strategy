@@ -194,6 +194,23 @@ function CreateChart(options)
     console.log(line);
 }
 
-// Use the default options
-const playerOptions = { hitSoft17: true, numberOfDecks: 6, strategyComplexity: "basic"};
+// We will spit out basic single/double/4+ options for both hit and stand on soft 17
+const playerOptions = { hitSoft17: true, numberOfDecks: 1, strategyComplexity: "basic"};
+CreateChart(playerOptions);
+
+playerOptions.hitSoft17 = false;
+CreateChart(playerOptions);
+
+playerOptions.numberOfDecks = 2;
+playerOptions.hitSoft17 = true;
+CreateChart(playerOptions);
+
+playerOptions.hitSoft17 = false;
+CreateChart(playerOptions);
+
+playerOptions.numberOfDecks = 4;
+playerOptions.hitSoft17 = true;
+CreateChart(playerOptions);
+
+playerOptions.hitSoft17 = false;
 CreateChart(playerOptions);
