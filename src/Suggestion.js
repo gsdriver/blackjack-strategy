@@ -22,42 +22,43 @@
  * SOFTWARE.
  */
 
-
 module.exports = {
     // Recommended actions follow Basic Strategy, based on the rules currently in play
     GetRecommendedPlayerAction: function(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
     {
+        const playerOptions = ExtractOptions(options);
+
         // If early surrender is allowed, check that now (that's what early surrender means - before dealer checks for blackjack
-        if ((options.surrender == "early") && (ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)))
+        if ((playerOptions.surrender == "early") && (ShouldPlayerSurrender(playerCards, dealerCard, handCount, playerOptions)))
         {
             return "surrender";
         }
 
         // OK, if an ace is showing it's easy - never take insurance
-        if ((dealerCard == 1) && !dealerCheckedBlackjack && options.offerInsurance)
+        if ((dealerCard == 1) && !dealerCheckedBlackjack && playerOptions.offerInsurance)
         {
             return "noinsurance";    
         }
 
         // Check each situation
-        if (ShouldPlayerSplit(playerCards, dealerCard, handCount, options))
+        if (ShouldPlayerSplit(playerCards, dealerCard, handCount, playerOptions))
         {
             return "split";
         }
-        else if (ShouldPlayerDouble(playerCards, dealerCard, handCount, options))
+        else if (ShouldPlayerDouble(playerCards, dealerCard, handCount, playerOptions))
         {
             return "double";
         }
         // Note if early surrender is allowed we already checked, so no need to check again
-        else if ((options.surrender != "early") && ShouldPlayerSurrender(playerCards, dealerCard, handCount, options))
+        else if ((playerOptions.surrender != "early") && ShouldPlayerSurrender(playerCards, dealerCard, handCount, playerOptions))
         {
             return "surrender";
         }
-        else if (ShouldPlayerStand(playerCards, dealerCard, handCount, options))
+        else if (ShouldPlayerStand(playerCards, dealerCard, handCount, playerOptions))
         {
             return "stand";
         }
-        else if (ShouldPlayerHit(playerCards, dealerCard, handCount, options))
+        else if (ShouldPlayerHit(playerCards, dealerCard, handCount, playerOptions))
         {
             return "hit";
         }
@@ -71,6 +72,55 @@ module.exports = {
  * Internal functions
  */
 
+function ExtractOptions(options)
+{
+    const playerOptions = { hitSoft17: true, surrender: "late", double: "any", doubleAfterSplit: true, 
+                            resplitAces: false, offerInsurance: true, numberOfDecks: 6, maxSplitHands: 4, 
+                            strategyComplexity: "basic"};
+
+    // Override defaults where set
+    if (options)
+    {
+        if (options.hasOwnProperty("hitSoft17"))
+        {
+            playerOptions.hitSoft17 = options.hitSoft17;
+        }
+        if (options.hasOwnProperty("surrender"))
+        {
+            playerOptions.surrender = options.surrender;
+        }
+        if (options.hasOwnProperty("double"))
+        {
+            playerOptions.double = options.double;
+        }
+        if (options.hasOwnProperty("doubleAfterSplit"))
+        {
+            playerOptions.doubleAfterSplit = options.doubleAfterSplit;
+        }
+        if (options.hasOwnProperty("resplitAces"))
+        {
+            playerOptions.resplitAces = options.resplitAces;
+        }
+        if (options.hasOwnProperty("offerInsurance"))
+        {
+            playerOptions.offerInsurance = options.offerInsurance;
+        }
+        if (options.hasOwnProperty("numberOfDecks"))
+        {
+            playerOptions.numberOfDecks = options.numberOfDecks;
+        }
+        if (options.hasOwnProperty("maxSplitHands"))
+        {
+            playerOptions.maxSplitHands = options.maxSplitHands;
+        }
+        if (options.hasOwnProperty("strategyComplexity"))
+        {
+            playerOptions.strategyComplexity = options.strategyComplexity;
+        }
+    }
+
+    return playerOptions;
+}
 function HandTotal(cards) 
 {
     var retval = { total: 0, soft: false };
@@ -289,7 +339,7 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
         else if (dealerCard == 9)
         {
             // Surrender if we have 16, but no including a pair of 8's
-            if ((handValue.total == 16) && (playerCards[0].rank != 8))
+            if ((handValue.total == 16) && (playerCards[0] != 8))
             {
                 shouldSurrender = true;
             }
@@ -310,7 +360,7 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
                 }
                 else
                 {
-                    shouldSurrender = (playerCards[0].rank != 8) && ((dealerCard == 9) || (dealerCard == 10));
+                    shouldSurrender = (playerCards[0] != 8) && ((dealerCard == 9) || (dealerCard == 10));
                 }
                 break;
             case 17:
@@ -333,7 +383,7 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
         else if (handValue.total == 16)
         {
             // Surrender against 10 or Ace, and against 9 if there are more than 4 decks
-            shouldSurrender = (playerCards[0].rank != 8) && ((dealerCard == 10) || (dealerCard == 1) 
+            shouldSurrender = (playerCards[0] != 8) && ((dealerCard == 10) || (dealerCard == 1) 
                         || ((dealerCard == 9) && (options.numberOfDecks >= 4)));
         }
     }

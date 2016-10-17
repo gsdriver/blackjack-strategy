@@ -24,18 +24,6 @@
 
 const lib = require('../src/suggestion');
 
-const defaultOptions = {
-    hitSoft17:true,             // Does dealer hit soft 17
-    surrender:"late",           // Surrender offered - none, late, or early
-    double:"any",               // Double rules - none, 10or11, 9or10or11, any
-    doubleAfterSplit:true,      // Can double after split - none, 10or11, 9or10or11, any
-    resplitAces:false,          // Can you resplit aces
-    offerInsurance:true,        // Insurance is offered
-    numberOfDecks:6,            // Number of decks in play
-    maxSplitHands:4,            // Maximum number of hands you can have due to splits
-    strategyComplexity:"basic"  // Complexity of suggestion we will receive
-};
-
 var succeeded = 0;
 var failed = 0;
 
@@ -55,20 +43,18 @@ function RunTest(testName, playerCards, dealerCard, handCount, dealerCheckedBlac
     }
 }
 
-RunTest("Stand on 16 against dealer 3", [9,7], 3, 1, true, defaultOptions, "stand");
-RunTest("Split 9s against dealer 5", [9,9], 5, 1, true, defaultOptions, "split");
-RunTest("Hit 16 against 10 after split", [9,7], 10, 2, true, defaultOptions, "hit");
-RunTest("Split pair of 8s against dealer Ace - basic", [8,8], 1, 1, true, defaultOptions, "split");
-RunTest("Surrender 15 against dealer 10",[10,5], 10, 1, true, defaultOptions, "surrender");
-RunTest("No insurance ever", [10,1], 1, 1, false, defaultOptions, "noinsurance");
-RunTest("Double soft 17 against 6", [1,6], 6, 2, true, defaultOptions, "double");
+// Use the default options
+RunTest("Stand on 16 against dealer 3", [9,7], 3, 1, true, null, "stand");
+RunTest("Split 9s against dealer 5", [9,9], 5, 1, true, null, "split");
+RunTest("Hit 16 against 10 after split", [9,7], 10, 2, true, null, "hit");
+RunTest("Split pair of 8s against dealer Ace - basic", [8,8], 1, 1, true, null, "split");
+RunTest("Surrender 15 against dealer 10",[10,5], 10, 1, true, null, "surrender");
+RunTest("No insurance ever", [10,1], 1, 1, false, null, "noinsurance");
+RunTest("Double soft 17 against 6", [1,6], 6, 2, true, null, "double");
 
 // Advanced strategy
-defaultOptions.strategyComplexity = "advanced";
-RunTest("Surrender pair of 8s against dealer Ace", [8,8], 1, 1, true, defaultOptions, "surrender");
-defaultOptions.numberOfDecks = 1;
-defaultOptions.surrender = "early";
-RunTest("Early Surrender pair of 8s against dealer 10 single deck", [8,8], 10, 1, false, defaultOptions, "surrender");
+RunTest("Surrender pair of 8s against dealer Ace", [8,8], 1, 1, true, {strategyComplexity: "advanced"}, "surrender");
+RunTest("Early Surrender pair of 8s against dealer 10 single deck", [8,8], 10, 1, false, {numberOfDecks:1, surrender:"early", strategyComplexity: "advanced"}, "surrender");
 
 // Final summary
 console.log("\r\nRan " + (succeeded + failed) + " tests; " + succeeded + " passed and " + failed + " failed");
