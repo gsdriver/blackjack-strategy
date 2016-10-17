@@ -42,7 +42,7 @@ The options structure is composed of the following fields with the following def
     offerInsurance:true,        // Insurance is offered
     numberOfDecks:6,            // Number of decks in play
     maxSplitHands:4,            // Maximum number of hands you can have due to splits
-    strategyComplexity:"basic"  // basic, advanced, or exactComposition - how closely Basic Strategy is followed (basic is simpler to remember but less precise rules, advanced is a higher standard, and exactComposition is the most advanced, returning optimal strategy looking at the card-by-card make-up of the player's hand)
+    strategyComplexity:"basic"  // basic, advanced, or exactComposition - how closely Basic Strategy is followed
 }
 ```
 The `strategyComplexity` field determines how closely Basic Strategy is followed in making a recommendation.  In the case of "basic," a basic set of easier-to-remember rules are followed (for example "always split 8s").  In the case of "advanced," Basic Stategy is followed even in more advanced edge-cases (for example, surrender a pair of 8s against a dealer ace if the dealer hits soft 17).  In the case of "exactComposition," certain rules are followed based on the exact make-up of the player's hand (for example, in single deck surrender a hand with a 10 and a 7 against a dealer ace if the dealer hits soft 17, but don't surrender other types of 17-value hands).
