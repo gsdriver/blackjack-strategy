@@ -22,10 +22,6 @@
  * SOFTWARE.
  */
 
-// Known cases that need to be implemented:
-//   Pair of 7s against dealer 10 in single deck should surrender or stand
-//   All of the exactComposition appendices except for appendix 6 (surrender)
-
 module.exports = {
     // Recommended actions follow Basic Strategy, based on the rules currently in play
     GetRecommendedPlayerAction: function(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
@@ -80,7 +76,7 @@ function ExtractOptions(options)
 {
     const playerOptions = { hitSoft17: true, surrender: "late", doubleRange:[0,21], doubleAfterSplit: true, 
                             resplitAces: false, offerInsurance: true, numberOfDecks: 6, maxSplitHands: 4, 
-                            strategyComplexity: "basic"};
+                            strategyComplexity: "simple"};
 
     // Override defaults where set
     if (options)
@@ -115,7 +111,12 @@ function ExtractOptions(options)
         }
         if (options.hasOwnProperty("strategyComplexity"))
         {
+            // Note that prior to version 1.1.2, "basic" was used instead of "simple"
             playerOptions.strategyComplexity = options.strategyComplexity;
+            if (playerOptions.strategyComplexity == "basic")
+            {
+                playerOptions.strategyComplexity = "simple";
+            }
         }
 
         // Double rules - make sure doubleRange is set as that is all we use here
@@ -225,7 +226,7 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
             // Or in single or double deck, against a 7 if double after split is allowed
             shouldSplit = ((dealerCard > 2) && (dealerCard < 7)) || 
                     ((dealerCard == 2) && (((options.numberOfDecks >= 4) && options.doubleAfterSplit) || (options.numberOfDecks <= 2)));
-            if ((options.numberOfDecks == 1) && (dealerCard == 7) && options.doubleAfterSplit)
+            if ((options.numberOfDecks <= 2) && (dealerCard == 7) && options.doubleAfterSplit)
             {
                 shouldSplit = true;
             }
@@ -239,15 +240,16 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
             }
             break;
         case 8:
-            // The basic rule is always split 8s - there are exceptions where we will surrender instead, which are covered in 
+            // The simple rule is always split 8s - there are exceptions where we will surrender instead, which are covered in 
             // the case where the player should surrender.  Check if they should surrender, if not they should split
             shouldSplit = !ShouldPlayerSurrender(playerCards, dealerCard, handCount, options);
             break;
         case 9:
             // Split against 2-9 except 7
             // An advanced exception - 9s should split against an ace in single deck if dealer has an ace and you can double after split
+            // and the dealer hits soft 17 (that's a mouthful!)
             shouldSplit = ((dealerCard > 1) && (dealerCard < 10) && (dealerCard != 7));
-            if ((options.strategyComplexity != "basic") && (dealerCard == 1) && (options.numberOfDecks == 1) && (options.doubleAfterSplit))
+            if ((options.strategyComplexity != "simple") && (dealerCard == 1) && (options.numberOfDecks == 1) && (options.doubleAfterSplit) && options.hitSoft17)
             {
                 shouldSplit = true;
             }
@@ -289,8 +291,13 @@ function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
         {
             case 13:
             case 14:
-                // Double against dealer 5 or 6
+                // Double against dealer 5 or 6; on single deck you should also double against 4
+                // On double deck a soft 14 should double against 4 if the dealer hits soft 17
                 shouldDouble = (dealerCard == 5) || (dealerCard == 6);
+                if ((dealerCard == 4) && ((options.numberOfDecks == 1) || ((options.numberOfDecks == 2) && (handValue.total == 14) && options.hitSoft17)))
+                {
+                    shouldDouble = true;
+                }
                 break;
             case 15:
             case 16:
@@ -389,10 +396,10 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
             if ((handValue.total >= 14) && (handValue.total <= 16))
             {
                 // UNLESS it's a pair of 8's in single deck and double after split is allowed
-                // This is an advanced option (for basic, we will "always split 8s")
+                // This is an advanced option (for simple, we will "always split 8s")
                 if ((playerCards[0] == 8) && (playerCards[1] == 8))
                 {
-                    shouldSurrender = (options.strategyComplexity != "basic") && (options.numberOfDecks == 1) && (options.doubleAfterSplit);
+                    shouldSurrender = (options.strategyComplexity != "simple") && (options.numberOfDecks == 1) && (options.doubleAfterSplit);
                 }
                 else
                 {
@@ -428,8 +435,8 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
         switch (handValue.total)
         {
             case 14:
-                // If looking at exact composition, then surrender a pair of 7s in a single deck game only
-                shouldSurrender = ((options.strategyComplexity == "exactComposition") && (options.numberOfDecks == 1) && (playerCards[0] == 7));
+                // If looking at advanced, then surrender a pair of 7s in a single deck game only
+                shouldSurrender = ((options.strategyComplexity != "simple") && (options.numberOfDecks == 1) && (playerCards[0] == 7));
                 break;
             case 15:
                 // Surrender, unless we are looking at exact composition, then single or double deck 8/7 doesn't surrender
@@ -438,9 +445,9 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
                 break;
             case 16:
                 // Surrender unless it's a pair of 8s in a single deck game or a double deck game with no double after split
-                // This is an advanced option (basic is "always split 8s")
+                // This is an advanced option (simple is "always split 8s")
                 shouldSurrender = (playerCards[0] != 8);
-                if ((options.strategyComplexity != "basic") && (playerCards[0] == 8))
+                if ((options.strategyComplexity != "simple") && (playerCards[0] == 8))
                 {
                     // Surrender pair of 8s if four or more decks or in a double-deck game where double after split isn't allowed
                     if ((options.numberOfDecks >= 4) || ((options.numberOfDecks == 2) && !options.doubleAfterSplit))
@@ -479,11 +486,11 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
     // Late surrender against a non-Ace
     else
     {
-        // The basic rule is 15 against 10 if more than one deck, and 16 (non-8s) against 10 always or against 9 if 4 or more decks
-        // If looking at advanced composition, 7s surrender against 10 in single deck and 8/7 against 10 doesn't surrender
+        // The simple rule is 15 against 10 if more than one deck, and 16 (non-8s) against 10 always or against 9 if 4 or more decks
+        // If looking at advanced, 7s surrender against 10 in single deck and 8/7 against 10 doesn't surrender
         if (handValue.total == 14)
         {
-            shouldSurrender = ((options.strategyComplexity == "exactComposition") && (playerCards[0] == 7) && (dealerCard == 10) && (options.numberOfDecks == 1));
+            shouldSurrender = ((options.strategyComplexity != "simple") && (playerCards[0] == 7) && (dealerCard == 10) && (options.numberOfDecks == 1));
         }
         else if (handValue.total == 15)
         {
@@ -546,6 +553,12 @@ function ShouldPlayerStand(playerCards, dealerCard, handCount, options)
         {
             // Stand on dealer 4-6
             shouldStand = (dealerCard >= 4) && (dealerCard <= 6);
+        }
+
+        // Advanced option - in single deck a pair of 7s should stand against a dealer 10
+        if ((options.strategyComplexity != "simple") && (handValue.total == 14) && (playerCards[0] == 7) && (dealerCard == 10) && (options.numberOfDecks == 1))
+        {
+            shouldStand = true;
         }
     }
 

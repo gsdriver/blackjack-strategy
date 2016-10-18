@@ -24,22 +24,6 @@
 
 const lib = require('../src/suggestion');
 
-function RunTest(testName, playerCards, dealerCard, handCount, dealerCheckedBlackjack, options, expectedResult)
-{
-    const result = lib.GetRecommendedPlayerAction(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options);
-
-    if (result == expectedResult)
-    {
-        console.log("SUCCESS: " + testName + " returned " + result);
-        succeeded++;
-    }
-    else
-    {
-        console.log("FAIL: " + testName + " returned " + result + " rather than " + expectedResult);
-        failed++;
-    }
-}
-
 function OptionsToText(options)
 {
     var text = "";
@@ -195,7 +179,7 @@ function CreateChart(options)
 }
 
 // We will spit out basic single/double/4+ options for both hit and stand on soft 17
-const playerOptions = { hitSoft17: true, numberOfDecks: 1, strategyComplexity: "basic"};
+const playerOptions = { hitSoft17: true, numberOfDecks: 1, strategyComplexity: "advanced"};
 CreateChart(playerOptions);
 
 playerOptions.hitSoft17 = false;
