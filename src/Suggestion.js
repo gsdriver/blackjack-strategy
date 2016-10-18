@@ -22,11 +22,14 @@
  * SOFTWARE.
  */
 
+const ec = require('../src/ExactComposition');
+
 module.exports = {
     // Recommended actions follow Basic Strategy, based on the rules currently in play
     GetRecommendedPlayerAction: function(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
     {
         const playerOptions = ExtractOptions(options);
+        var exactCompositionOverride = null;
 
         // If early surrender is allowed, check that now (that's what early surrender means - before dealer checks for blackjack
         if ((playerOptions.surrender == "early") && (ShouldPlayerSurrender(playerCards, dealerCard, handCount, playerOptions)))
@@ -38,6 +41,13 @@ module.exports = {
         if ((dealerCard == 1) && !dealerCheckedBlackjack && playerOptions.offerInsurance)
         {
             return "noinsurance";    
+        }
+
+        // OK, first, if there is an exact composition override use that
+        exactCompositionOverride = ec.GetExactCompositionOverride(playerCards, dealerCard, handCount, dealerCheckedBlackjack, playerOptions);
+        if (exactCompositionOverride)
+        {
+            return exactCompositionOverride;
         }
 
         // Check each situation
