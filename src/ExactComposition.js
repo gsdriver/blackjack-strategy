@@ -32,11 +32,80 @@ module.exports = {
             return null;
         }
 
+        // Now look at strategies based on game options
         if ((options.numberOfDecks == 2) && (!options.hitSoft17)) 
         {
             return TwoDeckStandSoft17(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options);
         }
+    },
+    // Should you surrender based on the exact composition of your cards?
+    // return value of true means you should surrender (based on the exact cards in your hand)
+    // return value of false means you should NOT surrender
+    // return value of null means there is no opinion based on exact composition (continue processing via normal rules)
+    GetSurrenderOverride : function (playerCards, dealerCard, handCount, options)
+    {
+        var shouldSurrender = null;
+
+        // You can only surrender on your first two cards, and it has to be an option
+        if ((options.strategyComplexity != "exactComposition") || 
+            (((options.surrender != "early") && (options.surrender != "late")) || (playerCards.length != 2) || (handCount != 1)))
+        {
+            return null;
+        }
+
+        var handValue = HandTotal(playerCards);
+
+        if (options.surrender == "early")
+        {
+            // Don't surrender 10/4 or 5/9 in single deck, or 4/10 in double deck against dealer 10
+            if ((handValue.total == 14) && (dealerCard == 10) && (options.strategyComplexity == "exactComposition"))
+            {
+                if ((options.numberOfDecks == 1) && 
+                    ((playerCards[0] == 4) || (playerCards[0] == 5) || (playerCards[0] == 9) || (playerCards[0] == 10)))
+                {
+                    shouldSurrender = false;        
+                }
+                if ((options.numberOfDecks == 2) && ((playerCards[0] == 4) || (playerCards[0] == 10)))
+                {
+                    shouldSurrender = false;
+                }
+            }
+        }
+        // Late surrender against an Ace when dealer hits on soft 17
+        else if ((options.hitSoft17) && (dealerCard == 1))
+        {
+            // Single or double deck 8/7 doesn't surrender
+            if ((handValue.total == 15) && (options.numberOfDecks <= 2) && ((playerCards[0] == 8) || (playerCards[0] == 7)))
+            {
+                shouldSurrender = false;
+            }
+            else if ((handValue.total == 17) && (options.numberOfDecks == 1) && ((playerCards[0] == 10) || (playerCards[0] == 7)))
+            {
+                shouldSurrender = true;
+            }
+        }
+        // Late surrender against an Ace, dealer doesn't hit soft 17
+        else if (dealerCard == 1)
+        {
+            // If it is a 9/7 single deck, we don't surrender
+            if ((handValue.total == 16) && (options.numberOfDecks == 1) && ((playerCards[0] == 9) || (playerCards[0] == 7)))
+            {
+                shouldSurrender = false;
+            }
+        }
+        // Late surrender against a non-Ace
+        else
+        {
+            // 8/7 against 10 doesn't surrender
+            if ((handValue.total == 15) && (dealerCard == 10) && ((playerCards[0] == 8) || (playerCards[0] == 7)))
+            {
+                shouldSurrender = false;
+            }
+        }
+
+        return shouldSurrender;    
     }
+
 }; 
 
 /*
@@ -166,3 +235,5 @@ function TwoDeckStandSoft17(playerCards, dealerCard, handCount, dealerCheckedBla
 
     return null;
  }
+
+ 

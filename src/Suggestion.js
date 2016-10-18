@@ -377,6 +377,13 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
         return false;
     }
 
+    // See if there is a special suggestion based on the exact composition of the player's hand
+    var exactCompositionSurrender = ec.GetSurrenderOverride(playerCards, dealerCard, handCount, options);
+    if (exactCompositionSurrender != null)
+    {
+        return exactCompositionSurrender;
+    }
+
     var handValue = HandTotal(playerCards);
 
     // Don't surrender a soft hand
@@ -413,20 +420,7 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
                 }
                 else
                 {
-                    // Surrender unless we're looking at an exact composition - then don't surrender 10/4 or 5/9 in single deck, or 4/10 in double deck
                     shouldSurrender = true;
-                    if ((handValue.total == 14) && (options.strategyComplexity == "exactComposition"))
-                    {
-                        if ((options.numberOfDecks == 1) && 
-                            ((playerCards[0] == 4) || (playerCards[0] == 5) || (playerCards[0] == 9) || (playerCards[0] == 10)))
-                        {
-                            shouldSurrender = false;        
-                        }
-                        if ((options.numberOfDecks == 2) && ((playerCards[0] == 4) || (playerCards[0] == 10)))
-                        {
-                            shouldSurrender = false;
-                        }
-                    }
                 }
             }
         }
@@ -449,9 +443,8 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
                 shouldSurrender = ((options.strategyComplexity != "simple") && (options.numberOfDecks == 1) && (playerCards[0] == 7));
                 break;
             case 15:
-                // Surrender, unless we are looking at exact composition, then single or double deck 8/7 doesn't surrender
-                shouldSurrender = !((options.strategyComplexity == "exactComposition") && (options.numberOfDecks <= 2) &&
-                    ((playerCards[0] == 8) || (playerCards[0] == 7)));
+                // Surrender
+                shouldSurrender = true;
                 break;
             case 16:
                 // Surrender unless it's a pair of 8s in a single deck game or a double deck game with no double after split
@@ -467,13 +460,8 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
                 }
                 break;
             case 17:
-                // Surrender unless you are looking at exact composition, in which case a single-deck game should only surrender
-                // 17 against Ace if it is a 10/7 hand
+                // Surrender (that's new by me)
                 shouldSurrender = true;
-                if ((options.strageyComplexity == "exactComposition") && (options.numberOfDecks == 1))
-                {
-                    shouldSurrender = ((playerCards[0] == 10) || (playerCards[0] == 7));
-                }
                 break;
             default:
                 // Don't surender
@@ -483,21 +471,14 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
     // Late surrender against an Ace, dealer doesn't hit soft 17
     else if (dealerCard == 1)
     {
-        // We only surrender a 16 in this case (not a pair of 8s).  Unless it is single deck, in which case only 10/6 surrenders
+        // We only surrender a 16 in this case (not a pair of 8s). 
         shouldSurrender = (handValue.total == 16) && (playerCards[0] != 8);
-        if (shouldSurrender)
-        {
-            if ((options.strategyComplexity == "exactComposition") && (options.numberOfDecks == 1) && ((playerCards[0] == 10) || (playerCards[0] == 6)))
-            {
-                shouldSurrender = false;
-            }
-        }
     }
     // Late surrender against a non-Ace
     else
     {
         // The simple rule is 15 against 10 if more than one deck, and 16 (non-8s) against 10 always or against 9 if 4 or more decks
-        // If looking at advanced, 7s surrender against 10 in single deck and 8/7 against 10 doesn't surrender
+        // If looking at advanced, 7s surrender against 10 in single deck 
         if (handValue.total == 14)
         {
             shouldSurrender = ((options.strategyComplexity != "simple") && (playerCards[0] == 7) && (dealerCard == 10) && (options.numberOfDecks == 1));
@@ -506,10 +487,6 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
         {
             // Surrender against 10 unless it's a single deck game
             shouldSurrender = ((dealerCard == 10) && (options.numberOfDecks > 1));
-            if ((options.strategyComplexity == "exactComposition") && (dealerCard == 10) && ((playerCards[0] == 8) || (playerCards[0] == 7)))
-            {
-                shouldSurrender = false;
-            }
         }
         else if (handValue.total == 16)
         {

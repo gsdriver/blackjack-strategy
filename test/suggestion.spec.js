@@ -70,6 +70,7 @@ RunTest("Surrender pair of 7s against dealer 10 single deck with exact compositi
 RunTest("Surrender 10-7 against dealer Ace single deck", [7,10], 1, 1, true, {numberOfDecks:1, strategyComplexity: "exactComposition"}, "surrender");
 RunTest("Specific four-card hand in double deck stand soft 17", [8,1,6,1], 10, 1, true, {numberOfDecks: 2, strategyComplexity: "exactComposition", hitSoft17: false}, "hit");
 RunTest("Three card 16 against 10 in double deck stand soft 17", [4,4,10], 10, 1, true, {numberOfDecks: 2, strategyComplexity: "exactComposition", hitSoft17: false}, "stand");
+RunTest("8/7 against Ace in double deck hit soft 17 doesn't surrender", [8,7], 1, 1, true, {numberOfDecks:2, strategyComplexity: "exactComposition", hitSoft17: true}, "hit");
 
 // Final summary
 console.log("\r\nRan " + (succeeded + failed) + " tests; " + succeeded + " passed and " + failed + " failed");
