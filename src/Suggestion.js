@@ -24,6 +24,7 @@
 
 const ec = require('../src/ExactComposition');
 const easy = require('../src/EasyStrategy');
+const utils = require('../src/Utils');
 
 module.exports = {
     // Recommended actions follow Basic Strategy, based on the rules currently in play
@@ -31,6 +32,7 @@ module.exports = {
     {
         const playerOptions = ExtractOptions(options);
         var exactCompositionOverride = null;
+        var countResult = null;
 
         // If early surrender is allowed, check that now (that's what early surrender means - before dealer checks for blackjack
         if ((playerOptions.surrender == "early") && (ShouldPlayerSurrender(playerCards, dealerCard, handCount, playerOptions)))
@@ -38,13 +40,23 @@ module.exports = {
             return "surrender";
         }
 
+        // OK, let's see if the count will change anything
+        if (playerOptions.count.system == "HiLo")
+        {
+            countResult = AdjustPlayForHiLoCount(playerCards, dealerCard, handCount, dealerCheckedBlackjack, playerOptions);    
+            if (countResult)
+            {
+                return countResult;
+            }
+        }
+         
         // OK, if an ace is showing it's easy - never take insurance
-        if ((dealerCard == 1) && !dealerCheckedBlackjack && playerOptions.offerInsurance)
+        if (((dealerCard == 1) && !dealerCheckedBlackjack && playerOptions.offerInsurance))
         {
             return "noinsurance";    
         }
 
-        if (playerOptions.strategyComplexity == "easy")
+        if ((playerOptions.strategyComplexity == "easy"))
         {
             return easy.EasyBasicStrategy(playerCards, dealerCard, handCount, dealerCheckedBlackjack, playerOptions);
         }
@@ -92,7 +104,7 @@ function ExtractOptions(options)
 {
     const playerOptions = { hitSoft17: true, surrender: "late", doubleRange:[0,21], doubleAfterSplit: true, 
                             resplitAces: false, offerInsurance: true, numberOfDecks: 6, maxSplitHands: 4, 
-                            strategyComplexity: "simple"};
+                            count: {system: null, trueCount: null}, strategyComplexity: "simple"};
 
     // Override defaults where set
     if (options)
@@ -124,6 +136,10 @@ function ExtractOptions(options)
         if (options.hasOwnProperty("maxSplitHands"))
         {
             playerOptions.maxSplitHands = options.maxSplitHands;
+        }
+        if (options.hasOwnProperty("count"))
+        {
+            playerOptions.count = options.count;
         }
         if (options.hasOwnProperty("strategyComplexity"))
         {
@@ -162,36 +178,6 @@ function ExtractOptions(options)
     }
 
     return playerOptions;
-}
-
-// 
-// HandTotal
-// 
-// Determines what the total of a hand should be, and whether that total is "soft" or not
-//
-
-function HandTotal(cards) 
-{
-    var retval = { total: 0, soft: false };
-    var hasAces = false;
-
-    for (var i = 0; i < cards.length; i++) {
-        retval.total += cards[i];
-
-        // Note if there's an ace
-        if (cards[i] == 1) {
-            hasAces = true;
-        }
-    }
-
-    // If there are aces, add 10 to the total (unless it would go over 21)
-    // Note that in this case the hand is soft
-    if ((retval.total <= 11) && hasAces) {
-        retval.total += 10;
-        retval.soft = true;
-    }
-
-    return retval;
 }
 
 //
@@ -287,7 +273,7 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
 function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
 {
     var shouldDouble = false;
-    var handValue = HandTotal(playerCards);
+    var handValue = utils.HandTotal(playerCards);
 
     // It needs to be a possible action
     if ((playerCards.length != 2) || ((handCount > 1) && !options.doubleAfterSplit))
@@ -390,7 +376,7 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
         return exactCompositionSurrender;
     }
 
-    var handValue = HandTotal(playerCards);
+    var handValue = utils.HandTotal(playerCards);
 
     // Don't surrender a soft hand
     if (handValue.soft)
@@ -514,7 +500,7 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
 function ShouldPlayerStand(playerCards, dealerCard, handCount, options)
 {
     var shouldStand = false;
-    var handValue = HandTotal(playerCards);
+    var handValue = utils.HandTotal(playerCards);
 
     if (handValue.soft)
     {
@@ -569,6 +555,119 @@ function ShouldPlayerStand(playerCards, dealerCard, handCount, options)
 function ShouldPlayerHit(playerCards, dealerCard, handCount, options)
 {
     // The only sanity check we'll do is that you haven't already busted
-    var handValue = HandTotal(playerCards);
+    var handValue = utils.HandTotal(playerCards);
     return (handValue.total < 21);
+}
+
+//
+// Hi-Lo strategy
+//
+// Adjussts the recommendation based on the Hi-Lo count as defined at
+// http://wizardofodds.com/games/blackjack/card-counting/high-low/
+// We re
+//
+function AdjustPlayForHiLoCount(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
+{
+    var handValue = utils.HandTotal(playerCards);
+    var canSplit = (playerCards[0] == playerCards[1]) && (playerCards.length == 2) && (handCount < options.maxSplitHands);
+    var canDouble = ((playerCards.length == 2) && ((handCount == 1) || options.doubleAfterSplit)) &&
+                        ((handValue.total < options.doubleRange[0]) || (handValue.total > options.doubleRange[1]));
+    var canSurrender = ((options.surrender == "early") || (options.surrender == "late")) && (playerCards.length == 2) && (handCount == 1);
+    var surrenderMatrix = [
+            {player: 14, dealer: 10, count: 3},
+            {player: 15, dealer: 10, count: 0},
+            {player: 15, dealer: 9, count: 2},
+            {player: 15, dealer: 1, count: 1}
+        ];
+
+    // We may take insurance!
+    if ((dealerCard == 1) && !dealerCheckedBlackjack && options.offerInsurance && (options.count.trueCount >= 3))
+    {
+        return "insurance";   
+    }
+    else if ((handValue.total == 16) && (dealerCard == 10) && (options.count.trueCount > 0))
+    {
+        return "stand";
+    }
+    else if ((handValue.total == 15) && (dealerCard == 10) && (options.count.trueCount > 4))
+    {
+        return "stand";
+    }
+    else if (canSplit && (handValue.total == 20))
+    {
+        if ((dealerCard == 5) && (options.count.trueCount >= 5))
+        {
+            return "split";
+        }
+        else if ((dealerCard == 6) && (options.count.trueCount >= 4))
+        {
+            return "split";
+        }
+    }
+    else if (canDouble && (handValue.total == 10) && (dealerCard == 10) && (options.count.trueCount >= 4))
+    {
+        return "double";
+    }
+    else if ((handValue.total == 12) && (dealerCard == 3) && (options.count.trueCount >= 2))
+    {
+        return "stand";
+    }
+    else if ((handValue.total == 12) && (dealerCard == 2) && (options.count.trueCount >= 3))
+    {
+        return "stand";
+    }
+    else if (canDouble && (handValue.total == 11) && (dealerCard == 1) && (options.count.trueCount >= 1))
+    {
+        return "double";
+    }
+    else if (canDouble && (handValue.total == 9) && (dealerCard == 2) && (options.count.trueCount >= 1))
+    {
+        return "double";
+    }
+    else if (canDouble && (handValue.total == 10) && (dealerCard == 1) && (options.count.trueCount >= 4))
+    {
+        return "double";
+    }
+    else if (canDouble && (handValue.total == 9) && (dealerCard == 7) && (options.count.trueCount >= 3))
+    {
+        return "double";
+    }
+    else if ((handValue.total == 16) && (dealerCard == 9) && (options.count.trueCount >= 5))
+    {
+        return "stand";
+    }
+    else if ((handValue.total == 13) && (dealerCard == 2) && (options.count.trueCount < -1))
+    {
+        return "hit";
+    }
+    else if ((handValue.total == 12) && (dealerCard == 4) && (options.count.trueCount < 0))
+    {
+        return "hit";
+    }
+    else if ((handValue.total == 12) && (dealerCard == 5) && (options.count.trueCount < -2))
+    {
+        return "hit";
+    }
+    else if ((handValue.total == 12) && (dealerCard == 6) && (options.count.trueCount < -1))
+    {
+        return "hit";
+    }
+    else if ((handValue.total == 13) && (dealerCard == 3) && (options.count.trueCount < -2))
+    {
+        return "hit";
+    }
+    else if (canSurrender)
+    {
+        for (var i = 0; i < surrenderMatrix.length; i++)
+        {
+            if ((handValue.total == surrenderMatrix[i].player) && (dealerCard == surrenderMatrix[i].dealer)
+                && (options.count.trueCount >= surrenderMatrix[i].count))
+            {
+                return "surrender";
+            }
+        }
+    }
+
+    // Nope, no adjustment
+    return null;
 }

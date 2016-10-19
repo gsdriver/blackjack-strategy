@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 
+const utils = require('../src/Utils');
+
 module.exports = {
     // Special-case overrides based on exact composition of cards
     GetExactCompositionOverride: function (playerCards, dealerCard, handCount, dealerCheckedBlackjack, options) 
@@ -53,7 +55,7 @@ module.exports = {
             return null;
         }
 
-        var handValue = HandTotal(playerCards);
+        var handValue = utils.HandTotal(playerCards);
 
         if (options.surrender == "early")
         {
@@ -111,36 +113,6 @@ module.exports = {
 /*
  * Internal functions
  */
-
- // 
-// HandTotal
-// 
-// Determines what the total of a hand should be, and whether that total is "soft" or not
-//
-
-function HandTotal(cards) 
-{
-    var retval = { total: 0, soft: false };
-    var hasAces = false;
-
-    for (var i = 0; i < cards.length; i++) {
-        retval.total += cards[i];
-
-        // Note if there's an ace
-        if (cards[i] == 1) {
-            hasAces = true;
-        }
-    }
-
-    // If there are aces, add 10 to the total (unless it would go over 21)
-    // Note that in this case the hand is soft
-    if ((retval.total <= 11) && hasAces) {
-        retval.total += 10;
-        retval.soft = true;
-    }
-
-    return retval;
-}
 
 function FindExceptionInList(playerCards, dealerCard, overrides)
 {
@@ -252,11 +224,11 @@ function TwoDeckStandSoft17(playerCards, dealerCard, handCount, dealerCheckedBla
     }
 
     // Three or more cards, 16 vs 10 stands and soft 18 vs Ace stands (except as noted in table which was already checked)
-    if ((playerCards.length >= 3) && (HandTotal(playerCards).total == 16) && (dealerCard == 10))
+    if ((playerCards.length >= 3) && (utils.HandTotal(playerCards).total == 16) && (dealerCard == 10))
     {
         return "stand";
     }
-    else if ((playerCards.length >= 3) && (HandTotal(playerCards).total == 18) && (HandTotal(playerCards).soft) && (dealerCard == 1))
+    else if ((playerCards.length >= 3) && (utils.HandTotal(playerCards).total == 18) && (utils.HandTotal(playerCards).soft) && (dealerCard == 1))
     {
         return "stand";
     }

@@ -77,5 +77,10 @@ RunTest("Specific six-card hand in double deck stand soft 17", [2,3,3,2,3,3], 9,
 RunTest("Three card 16 against 10 in double deck stand soft 17", [4,4,10], 10, 1, true, {numberOfDecks: 2, strategyComplexity: "exactComposition", hitSoft17: false}, "stand");
 RunTest("8/7 against Ace in double deck hit soft 17 doesn't surrender", [8,7], 1, 1, true, {numberOfDecks:2, strategyComplexity: "exactComposition", hitSoft17: true}, "hit");
 
+// Some counting strategies
+RunTest("Insurance with counting", [4,9], 1, 1, false, {count:{system: "HiLo", trueCount: 4}}, "insurance");
+RunTest("Split 10s against 5", [10,10], 5, 1, false, {count:{system: "HiLo", trueCount: 5.5}}, "split")
+RunTest("Surrender 14 against 10", [4,10], 10, 1, false, {count:{system: "HiLo", trueCount: 3}}, "surrender")
+
 // Final summary
 console.log("\r\nRan " + (succeeded + failed) + " tests; " + succeeded + " passed and " + failed + " failed");

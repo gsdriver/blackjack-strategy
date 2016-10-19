@@ -46,7 +46,11 @@ The options structure is composed of the following fields with the following def
     offerInsurance:true,        // Is insurance offered
     numberOfDecks:6,            // Number of decks in play
     maxSplitHands:4,            // Max number of hands you can have due to splits
-    strategyComplexity:"simple" // easy (v1.2 or higher), simple, advanced, or exactComposition (see below)
+    count: {                    // Structure defining the count (v1.3 or higher)
+        system: null,           // The count system - only "HiLo" is supported
+        trueCount: null };      // The TrueCount (count / number of decks left)
+    strategyComplexity:"simple" // easy (v1.2 or higher), simple, advanced, 
+                                // or exactComposition (see below)
 }
 ```
 

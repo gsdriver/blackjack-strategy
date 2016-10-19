@@ -22,11 +22,13 @@
  * SOFTWARE.
  */
 
+const utils = require('../src/Utils');
+
 module.exports = {
     // Recommended actions follow Basic Strategy, based on the rules currently in play
     EasyBasicStrategy: function(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
     {
-        var handValue = HandTotal(playerCards);
+        var handValue = utils.HandTotal(playerCards);
 
         // Can you split?
         if ((playerCards[0] == playerCards[1]) && (playerCards.length == 2) && (handCount < options.maxSplitHands))
@@ -82,37 +84,3 @@ module.exports = {
         }
     }
 }; 
-
-/*
- * Internal functions
- */
-
-// 
-// HandTotal
-// 
-// Determines what the total of a hand should be, and whether that total is "soft" or not
-//
-
-function HandTotal(cards) 
-{
-    var retval = { total: 0, soft: false };
-    var hasAces = false;
-
-    for (var i = 0; i < cards.length; i++) {
-        retval.total += cards[i];
-
-        // Note if there's an ace
-        if (cards[i] == 1) {
-            hasAces = true;
-        }
-    }
-
-    // If there are aces, add 10 to the total (unless it would go over 21)
-    // Note that in this case the hand is soft
-    if ((retval.total <= 11) && hasAces) {
-        retval.total += 10;
-        retval.soft = true;
-    }
-
-    return retval;
-}
