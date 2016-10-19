@@ -23,6 +23,7 @@
  */
 
 const ec = require('../src/ExactComposition');
+const easy = require('../src/EasyStrategy');
 
 module.exports = {
     // Recommended actions follow Basic Strategy, based on the rules currently in play
@@ -41,6 +42,11 @@ module.exports = {
         if ((dealerCard == 1) && !dealerCheckedBlackjack && playerOptions.offerInsurance)
         {
             return "noinsurance";    
+        }
+
+        if (playerOptions.strategyComplexity == "easy")
+        {
+            return easy.EasyBasicStrategy(playerCards, dealerCard, handCount, dealerCheckedBlackjack, playerOptions);
         }
 
         // OK, first, if there is an exact composition override use that

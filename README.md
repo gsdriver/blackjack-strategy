@@ -46,11 +46,23 @@ The options structure is composed of the following fields with the following def
     offerInsurance:true,        // Is insurance offered
     numberOfDecks:6,            // Number of decks in play
     maxSplitHands:4,            // Max number of hands you can have due to splits
-    strategyComplexity:"simple" // simple, advanced, or exactComposition (see below)
+    strategyComplexity:"simple" // easy (v1.2 or higher), simple, advanced, or exactComposition (see below)
 }
 ```
 
-The `strategyComplexity` field determines how closely Basic Strategy is followed in making a recommendation.  In the case of "simple," a basic set of easier-to-remember rules are followed (for example "always split 8s").  In the case of "advanced," Basic Stategy is followed even in more advanced edge-cases (for example, surrender a pair of 8s against a dealer ace if the dealer hits soft 17).  In the case of "exactComposition," certain rules are followed based on the exact make-up of the player's hand (for example, in single deck surrender a hand with a 10 and a 7 against a dealer ace if the dealer hits soft 17, but don't surrender other types of 17-value hands).
+The `strategyComplexity` field determines how closely Basic Strategy is followed in making a recommendation.  In the case of "easy" the strategy is an easy-to-follow set of rules designed for beginners which simulation runs show is about 0.6% less advantagous than the "advanced" strategy on a 6-deck game:
+
+ * Split all pairs except 4s, 5s, and 10s
+ * Double 9 against a dealer card of 2-6
+ * Double 10 against a dealer card of 2-9
+ * Always double 11
+ * Hit totals less than 12
+ * Stand on totals of hard 17 or above
+ * On hard 12-16, stand against a dealer 2-6, hit on 7 or above
+ * Hit soft total up to and including 17
+ * Hit soft 18 if the dealer has 9, 10, or Ace showing
+
+The "simple" strategy is a little more complex than the "easy" option and designed for more intermediate players (for example "always split 8s").  In the case of "advanced," Basic Stategy is followed even in more advanced edge-cases (for example, surrender a pair of 8s against a dealer ace if the dealer hits soft 17).  In the case of "exactComposition," certain rules are followed based on the exact make-up of the player's hand (for example, in single deck surrender a hand with a 10 and a 7 against a dealer ace if the dealer hits soft 17, but don't surrender other types of 17-value hands).
 
 Some example cases:
 

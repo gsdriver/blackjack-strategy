@@ -60,6 +60,10 @@ RunTest("Double 8 against dealer 5 single deck", [3,5], 5, 1, true, {numberOfDec
 RunTest("Hit 8 against dealer 5 single deck if can't double", [3,5], 5, 1, true, {numberOfDecks:1, doubleRange:[9,11]}, "hit");
 RunTest("Stand soft 18 against Ace if stand on soft 17", [1,7], 1, 1, true, {numberOfDecks:1, hitSoft17:false}, "stand");
 
+// Easy strategy
+RunTest("Split pair of 7s against dealer 10 single deck", [7,7], 10, 1, true, {numberOfDecks:1, strategyComplexity: "easy"}, "split");
+RunTest("Double 11 against Ace multi-deck stand soft 17", [7,4], 1, 1, true, {numberOfDecks:6, hitSoft17: false, strategyComplexity: "easy"}, "double");
+
 // Advanced strategy
 RunTest("Surrender pair of 8s against dealer Ace", [8,8], 1, 1, true, {strategyComplexity: "advanced"}, "surrender");
 RunTest("Early Surrender pair of 8s against dealer 10 single deck", [8,8], 10, 1, false, {numberOfDecks:1, surrender:"early", strategyComplexity: "advanced"}, "surrender");
