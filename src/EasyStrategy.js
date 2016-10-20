@@ -22,14 +22,10 @@
  * SOFTWARE.
  */
 
-const utils = require('../src/Utils');
-
 module.exports = {
     // Recommended actions follow Basic Strategy, based on the rules currently in play
-    EasyBasicStrategy: function(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
+    EasyBasicStrategy: function(playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, options)
     {
-        var handValue = utils.HandTotal(playerCards);
-
         // Can you split?
         if ((playerCards[0] == playerCards[1]) && (playerCards.length == 2) && (handCount < options.maxSplitHands))
         {

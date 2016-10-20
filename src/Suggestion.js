@@ -24,7 +24,6 @@
 
 const ec = require('../src/ExactComposition');
 const easy = require('../src/EasyStrategy');
-const utils = require('../src/Utils');
 
 module.exports = {
     // Recommended actions follow Basic Strategy, based on the rules currently in play
@@ -33,9 +32,10 @@ module.exports = {
         const playerOptions = ExtractOptions(options);
         var exactCompositionOverride = null;
         var countResult = null;
+        var handValue = HandTotal(playerCards);
 
         // If early surrender is allowed, check that now (that's what early surrender means - before dealer checks for blackjack
-        if ((playerOptions.surrender == "early") && (ShouldPlayerSurrender(playerCards, dealerCard, handCount, playerOptions)))
+        if ((playerOptions.surrender == "early") && (ShouldPlayerSurrender(playerCards, dealerCard, handValue, handCount, playerOptions)))
         {
             return "surrender";
         }
@@ -43,7 +43,7 @@ module.exports = {
         // OK, let's see if the count will change anything
         if (playerOptions.count.system == "HiLo")
         {
-            countResult = AdjustPlayForHiLoCount(playerCards, dealerCard, handCount, dealerCheckedBlackjack, playerOptions);    
+            countResult = AdjustPlayForHiLoCount(playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, playerOptions);    
             if (countResult)
             {
                 return countResult;
@@ -58,35 +58,35 @@ module.exports = {
 
         if ((playerOptions.strategyComplexity == "easy"))
         {
-            return easy.EasyBasicStrategy(playerCards, dealerCard, handCount, dealerCheckedBlackjack, playerOptions);
+            return easy.EasyBasicStrategy(playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, playerOptions);
         }
 
         // OK, first, if there is an exact composition override use that
-        exactCompositionOverride = ec.GetExactCompositionOverride(playerCards, dealerCard, handCount, dealerCheckedBlackjack, playerOptions);
+        exactCompositionOverride = ec.GetExactCompositionOverride(playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, playerOptions);
         if (exactCompositionOverride)
         {
             return exactCompositionOverride;
         }
 
         // Check each situation
-        if (ShouldPlayerSplit(playerCards, dealerCard, handCount, playerOptions))
+        if (ShouldPlayerSplit(playerCards, dealerCard, handValue, handCount, playerOptions))
         {
             return "split";
         }
-        else if (ShouldPlayerDouble(playerCards, dealerCard, handCount, playerOptions))
+        else if (ShouldPlayerDouble(playerCards, dealerCard, handValue, handCount, playerOptions))
         {
             return "double";
         }
         // Note if early surrender is allowed we already checked, so no need to check again
-        else if ((playerOptions.surrender != "early") && ShouldPlayerSurrender(playerCards, dealerCard, handCount, playerOptions))
+        else if ((playerOptions.surrender != "early") && ShouldPlayerSurrender(playerCards, dealerCard, handValue, handCount, playerOptions))
         {
             return "surrender";
         }
-        else if (ShouldPlayerStand(playerCards, dealerCard, handCount, playerOptions))
+        else if (ShouldPlayerStand(playerCards, dealerCard, handValue, handCount, playerOptions))
         {
             return "stand";
         }
-        else if (ShouldPlayerHit(playerCards, dealerCard, handCount, playerOptions))
+        else if (ShouldPlayerHit(playerCards, dealerCard, handValue, handCount, playerOptions))
         {
             return "hit";
         }
@@ -99,6 +99,33 @@ module.exports = {
 /*
  * Internal functions
  */
+
+function HandTotal(cards)
+{
+    var retval = { total: 0, soft: false };
+    var hasAces = false;
+
+    for (var i = 0; i < cards.length; i++) 
+    {
+        retval.total += cards[i];
+
+        // Note if there's an ace
+        if (cards[i] == 1) 
+        {
+            hasAces = true;
+        }
+    }
+
+    // If there are aces, add 10 to the total (unless it would go over 21)
+    // Note that in this case the hand is soft
+    if ((retval.total <= 11) && hasAces) 
+    {
+        retval.total += 10;
+        retval.soft = true;
+    }
+
+    return retval;
+}
 
 function ExtractOptions(options)
 {
@@ -184,7 +211,7 @@ function ExtractOptions(options)
 // Split strategy
 //
 
-function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
+function ShouldPlayerSplit(playerCards, dealerCard, handValue, handCount, options)
 {
     var shouldSplit = false;
 
@@ -244,7 +271,7 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
         case 8:
             // The simple rule is always split 8s - there are exceptions where we will surrender instead, which are covered in 
             // the case where the player should surrender.  Check if they should surrender, if not they should split
-            shouldSplit = !ShouldPlayerSurrender(playerCards, dealerCard, handCount, options);
+            shouldSplit = !ShouldPlayerSurrender(playerCards, dealerCard, handValue, handCount, options);
             break;
         case 9:
             // Split against 2-9 except 7
@@ -270,10 +297,9 @@ function ShouldPlayerSplit(playerCards, dealerCard, handCount, options)
 // Double strategy
 //
 
-function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
+function ShouldPlayerDouble(playerCards, dealerCard, handValue, handCount, options)
 {
     var shouldDouble = false;
-    var handValue = utils.HandTotal(playerCards);
 
     // It needs to be a possible action
     if ((playerCards.length != 2) || ((handCount > 1) && !options.doubleAfterSplit))
@@ -359,7 +385,7 @@ function ShouldPlayerDouble(playerCards, dealerCard, handCount, options)
 // It also looks at various combinations of player hands for more advanced strategy complexities
 //
 
-function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
+function ShouldPlayerSurrender(playerCards, dealerCard, handValue, handCount, options)
 {
     var shouldSurrender = false;
 
@@ -370,13 +396,11 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
     }
 
     // See if there is a special suggestion based on the exact composition of the player's hand
-    var exactCompositionSurrender = ec.GetSurrenderOverride(playerCards, dealerCard, handCount, options);
+    var exactCompositionSurrender = ec.GetSurrenderOverride(playerCards, dealerCard, handValue, handCount, options);
     if (exactCompositionSurrender != null)
     {
         return exactCompositionSurrender;
     }
-
-    var handValue = utils.HandTotal(playerCards);
 
     // Don't surrender a soft hand
     if (handValue.soft)
@@ -497,10 +521,9 @@ function ShouldPlayerSurrender(playerCards, dealerCard, handCount, options)
 // So at this point we're only assessing whether you should stand as opposed to hitting
 //
 
-function ShouldPlayerStand(playerCards, dealerCard, handCount, options)
+function ShouldPlayerStand(playerCards, dealerCard, handValue, handCount, options)
 {
     var shouldStand = false;
-    var handValue = utils.HandTotal(playerCards);
 
     if (handValue.soft)
     {
@@ -552,10 +575,9 @@ function ShouldPlayerStand(playerCards, dealerCard, handCount, options)
 // took an action where the player has no choice of play (e.g. doubled or split aces)
 //
 
-function ShouldPlayerHit(playerCards, dealerCard, handCount, options)
+function ShouldPlayerHit(playerCards, dealerCard, handValue, handCount, options)
 {
     // The only sanity check we'll do is that you haven't already busted
-    var handValue = utils.HandTotal(playerCards);
     return (handValue.total < 21);
 }
 
@@ -566,9 +588,8 @@ function ShouldPlayerHit(playerCards, dealerCard, handCount, options)
 // http://wizardofodds.com/games/blackjack/card-counting/high-low/
 // We re
 //
-function AdjustPlayForHiLoCount(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
+function AdjustPlayForHiLoCount(playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, options)
 {
-    var handValue = utils.HandTotal(playerCards);
     var canSplit = (playerCards[0] == playerCards[1]) && (playerCards.length == 2) && (handCount < options.maxSplitHands);
     var canDouble = ((playerCards.length == 2) && ((handCount == 1) || options.doubleAfterSplit)) &&
                         ((handValue.total < options.doubleRange[0]) || (handValue.total > options.doubleRange[1]));

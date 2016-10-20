@@ -17,7 +17,7 @@ pass in different Rule variants as well.
  
 # Usage
 
-The exposed function from this librayr is `GetRecommendedPlayerAction` which will return a string suggesting an action for the player to take on their hand.
+The exposed function from this library is `GetRecommendedPlayerAction` which will return a string suggesting an action for the player to take on their hand.
 
 ```
 GetRecommendedPlayerAction(playerCards, dealerCard, handCount, 

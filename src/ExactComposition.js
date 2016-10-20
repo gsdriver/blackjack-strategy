@@ -22,11 +22,9 @@
  * SOFTWARE.
  */
 
-const utils = require('../src/Utils');
-
 module.exports = {
     // Special-case overrides based on exact composition of cards
-    GetExactCompositionOverride: function (playerCards, dealerCard, handCount, dealerCheckedBlackjack, options) 
+    GetExactCompositionOverride: function (playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, options) 
     {
         // If exactComposition isn't set, no override
         if (options.strategyComplexity != "exactComposition")
@@ -37,30 +35,21 @@ module.exports = {
         // Now look at strategies based on game options
         if ((options.numberOfDecks == 2) && (!options.hitSoft17)) 
         {
-            return TwoDeckStandSoft17(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options);
+            return TwoDeckStandSoft17(playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, options);
         }
     },
     // Should you surrender based on the exact composition of your cards?
     // return value of true means you should surrender (based on the exact cards in your hand)
     // return value of false means you should NOT surrender
     // return value of null means there is no opinion based on exact composition (continue processing via normal rules)
-    GetSurrenderOverride : function (playerCards, dealerCard, handCount, options)
+    GetSurrenderOverride : function (playerCards, dealerCard, handValue, handCount, options)
     {
         var shouldSurrender = null;
-
-        // You can only surrender on your first two cards, and it has to be an option
-        if ((options.strategyComplexity != "exactComposition") || 
-            (((options.surrender != "early") && (options.surrender != "late")) || (playerCards.length != 2) || (handCount != 1)))
-        {
-            return null;
-        }
-
-        var handValue = utils.HandTotal(playerCards);
 
         if (options.surrender == "early")
         {
             // Don't surrender 10/4 or 5/9 in single deck, or 4/10 in double deck against dealer 10
-            if ((handValue.total == 14) && (dealerCard == 10) && (options.strategyComplexity == "exactComposition"))
+            if ((handValue.total == 14) && (dealerCard == 10))
             {
                 if ((options.numberOfDecks == 1) && 
                     ((playerCards[0] == 4) || (playerCards[0] == 5) || (playerCards[0] == 9) || (playerCards[0] == 10)))
@@ -148,19 +137,15 @@ function FindExceptionInList(playerCards, dealerCard, overrides)
  }
 
 // Taken from http://wizardofodds.com/games/blackjack/appendix/3b/
-function TwoDeckStandSoft17(playerCards, dealerCard, handCount, dealerCheckedBlackjack, options)
+function TwoDeckStandSoft17(playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, options)
 {
     var result;
     const overrides = [
-            {hand:[2,9], dealer: 1, action: "hit"},
-            {hand:[3,8], dealer: 1, action: "hit"},
-            {hand:[2,10], dealer: 4, action: "hit"},
             {hand:[4,6,6], dealer: 10, action: "hit"},
             {hand:[3,6,7], dealer: 10, action: "hit"},
             {hand:[2,6,8], dealer: 10, action: "hit"},
             {hand:[1,6,9], dealer: 10, action: "hit"},
             {hand:[3,3,10], dealer: 10, action: "hit"},
-            {hand:[1,1,6], dealer: 1, action: "hit"},
             {hand:[2,2,6,6], dealer: 10, action: "hit"},
             {hand:[1,3,6,6], dealer: 10, action: "hit"},
             {hand:[1,2,6,7], dealer: 10, action: "hit"},
@@ -217,20 +202,46 @@ function TwoDeckStandSoft17(playerCards, dealerCard, handCount, dealerCheckedBla
             {hand:[2,2,2,2,2,6], dealer: 10, action: "hit"},
         ];
 
-    result = FindExceptionInList(playerCards, dealerCard, overrides);
-    if (result)
+    // Special case if there are two cards
+    if (playerCards.length == 2)
     {
-        return result;
+        if ((handValue.total == 11) && (dealerCard == 1) &&
+            ((playerCards[0] == 2) || (playerCards[0] == 3) || (playerCards[0] == 8) || (playerCards[0] == 9)))
+        {
+            return "double";            
+        }
+        else if ((handValue.total == 12) && (dealerCard == 4) &&
+                    ((playerCards[0] == 2) || (playerCards[0] == 10)))
+        {
+            return "hit";
+        }
     }
-
-    // Three or more cards, 16 vs 10 stands and soft 18 vs Ace stands (except as noted in table which was already checked)
-    if ((playerCards.length >= 3) && (utils.HandTotal(playerCards).total == 16) && (dealerCard == 10))
+    else // 3 or more cards
     {
-        return "stand";
-    }
-    else if ((playerCards.length >= 3) && (utils.HandTotal(playerCards).total == 18) && (utils.HandTotal(playerCards).soft) && (dealerCard == 1))
-    {
-        return "stand";
+        // Ace, Ace, 6 hits against dealer Ace
+        if ((playerCards.length == 3) && (handValue.total == 18) && handValue.soft && (dealerCard == 1) &&
+                    ((playerCards[0] == 6) || (playerCards[1] == 6) || (playerCards[2] == 6)))
+        {
+            return "hit";
+        }
+        else if ((playerCards.length == 6) || (handValue.total == 16))
+        {
+            result = FindExceptionInList(playerCards, dealerCard, overrides);
+            if (result)
+            {
+                return result;
+            }
+        }
+    
+        // Three or more cards, 16 vs 10 stands and soft 18 vs Ace stands (except as noted in table which was already checked)
+        if ((handValue.total == 16) && (dealerCard == 10))
+        {
+            return "stand";
+        }
+        if ((handValue.total == 18) && (handValue.soft) && (dealerCard == 1))
+        {
+            return "stand";
+        }
     }
 
     return null;
