@@ -82,5 +82,8 @@ RunTest("Insurance with counting", [4,9], 1, 1, false, {count:{system: "HiLo", t
 RunTest("Split 10s against 5", [10,10], 5, 1, false, {count:{system: "HiLo", trueCount: 5.5}}, "split")
 RunTest("Surrender 14 against 10", [4,10], 10, 1, false, {count:{system: "HiLo", trueCount: 3}}, "surrender")
 
+// Test legacy "double" option
+RunTest("Hit with no double", [2,8], 6, 1, false, {double: "none"}, "hit");
+
 // Final summary
 console.log("\r\nRan " + (succeeded + failed) + " tests; " + succeeded + " passed and " + failed + " failed");

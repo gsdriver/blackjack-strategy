@@ -188,18 +188,18 @@ function ExtractOptions(options)
             // Translate to doubleRange
             if (options.double == "none") 
             {
-                playerOptions.doubleRange.low = 0;
-                playerOptions.doubleRange.high = 0;
+                playerOptions.doubleRange[0] = 0;
+                playerOptions.doubleRange[1] = 0;
             } 
             else if (options.double === "10or11") 
             {
-                playerOptions.doubleRange.low = 10;
-                playerOptions.doubleRange.high = 11;
+                playerOptions.doubleRange[0] = 10;
+                playerOptions.doubleRange[1] = 11;
             } 
             else if (options.double === "9or10or11") 
             {
-                playerOptions.doubleRange.low = 9;
-                playerOptions.doubleRange.high = 11;
+                playerOptions.doubleRange[0] = 9;
+                playerOptions.doubleRange[1] = 11;
             }
         }
     }
