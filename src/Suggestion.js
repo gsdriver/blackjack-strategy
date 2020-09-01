@@ -24,6 +24,7 @@
 
 const ec = require('../src/ExactComposition');
 const easy = require('../src/EasyStrategy');
+const BlackjackCalculation = require('./BlackjackCalculation');
 
 module.exports = {
     // Recommended actions follow Basic Strategy, based on the rules currently in play
@@ -59,6 +60,22 @@ module.exports = {
         if ((playerOptions.strategyComplexity == "easy"))
         {
             return easy.EasyBasicStrategy(playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, playerOptions);
+        }
+
+        // blackjackcalculation.com basic strategies
+        if ((playerOptions.strategyComplexity == "bjc-supereasy"))
+        {
+            return BlackjackCalculation.SuperEasyStrategy(playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, playerOptions);
+        }
+
+        if ((playerOptions.strategyComplexity == "bjc-simple"))
+        {
+            return BlackjackCalculation.SimpleStrategy(playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, playerOptions);
+        }
+
+        if ((playerOptions.strategyComplexity == "bjc-great"))
+        {
+            return BlackjackCalculation.GreatStrategy(playerCards, dealerCard, handValue, handCount, dealerCheckedBlackjack, playerOptions);
         }
 
         // OK, first, if there is an exact composition override use that
