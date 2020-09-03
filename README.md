@@ -49,12 +49,17 @@ The options structure is composed of the following fields with the following def
     count: {                    // Structure defining the count (v1.3 or higher)
         system: null,           // The count system - only "HiLo" is supported
         trueCount: null };      // The TrueCount (count / number of decks left)
-    strategyComplexity:"simple" // easy (v1.2 or higher), simple, advanced, 
-                                // or exactComposition (see below)
+    strategyComplexity:"simple" // easy (v1.2 or higher), simple, advanced,
+                                // exactComposition, bjc-supereasy (v1.4 or higher),
+                                // bjc-simple (v1.4 or higher), or bjc-great
+                                // (v1.4 or higer) - see below for details
 }
 ```
 
-The `strategyComplexity` field determines how closely Basic Strategy is followed in making a recommendation.  In the case of "easy" the strategy is an easy-to-follow set of rules designed for beginners which simulation runs show is about 0.6% less advantagous than the "advanced" strategy on a 6-deck game:
+The `strategyComplexity` field determines how closely Basic Strategy is followed in making a recommendation.  There are six supported values:
+
+## Easy 
+In the case of "easy" the strategy is an easy-to-follow set of rules designed for beginners which simulation runs show is about 0.6% less advantagous than the "advanced" strategy on a 6-deck game:
 
  * Split all pairs except 4s, 5s, and 10s
  * Double 9 against a dealer card of 2-6
@@ -66,7 +71,19 @@ The `strategyComplexity` field determines how closely Basic Strategy is followed
  * Hit soft total up to and including 17
  * Hit soft 18 if the dealer has 9, 10, or Ace showing
 
-The "simple" strategy is a little more complex than the "easy" option and designed for more intermediate players (for example "always split 8s").  In the case of "advanced," Basic Stategy is followed even in more advanced edge-cases (for example, surrender a pair of 8s against a dealer ace if the dealer hits soft 17).  In the case of "exactComposition," certain rules are followed based on the exact make-up of the player's hand (for example, in single deck surrender a hand with a 10 and a 7 against a dealer ace if the dealer hits soft 17, but don't surrender other types of 17-value hands).
+## Simple
+The "simple" strategy is a little more complex than the "easy" option and designed for more intermediate players (for example "always split 8s").  
+
+## Advanced
+In the case of "advanced," Basic Stategy is followed even in more advanced edge-cases (for example, surrender a pair of 8s against a dealer ace if the dealer hits soft 17).  
+
+## Exact Composition
+In the case of "exactComposition," certain rules are followed based on the exact make-up of the player's hand (for example, in single deck surrender a hand with a 10 and a 7 against a dealer ace if the dealer hits soft 17, but don't surrender other types of 17-value hands).
+
+## bjc-simple, bjc-supereasy, and bjc-great
+These strategies come from blackjackcalculation.com[http://blackjackcalculation.com/] and, similar
+to "easy," "simple," and "advanced" allow players to follow a different set of rules that are 
+easy to remember, but provide a trade-off of expected payout for an easier set of rules
 
 Some example cases:
 
