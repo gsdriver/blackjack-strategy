@@ -81,7 +81,7 @@ In the case of "advanced," Basic Stategy is followed even in more advanced edge-
 In the case of "exactComposition," certain rules are followed based on the exact make-up of the player's hand (for example, in single deck surrender a hand with a 10 and a 7 against a dealer ace if the dealer hits soft 17, but don't surrender other types of 17-value hands).
 
 ## bjc-simple, bjc-supereasy, and bjc-great
-These strategies come from blackjackcalculation.com[http://blackjackcalculation.com/] and, similar
+These strategies come from <http://blackjackcalculation.com/> and, similar
 to "easy," "simple," and "advanced" allow players to follow a different set of rules that are 
 easy to remember, but provide a trade-off of expected payout for an easier set of rules
 
