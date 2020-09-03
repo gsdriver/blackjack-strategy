@@ -60,6 +60,24 @@ RunTest("Double 8 against dealer 5 single deck", [3,5], 5, 1, true, {numberOfDec
 RunTest("Hit 8 against dealer 5 single deck if can't double", [3,5], 5, 1, true, {numberOfDecks:1, doubleRange:[9,11]}, "hit");
 RunTest("Stand soft 18 against Ace if stand on soft 17", [1,7], 1, 1, true, {numberOfDecks:1, hitSoft17:false}, "stand");
 
+// blackjackcalculation.com Super-easy strategy
+RunTest("Split pair of 8s against dealer 9", [8,8], 9, 1, true, {numberOfDecks:1, strategyComplexity: "bjc-supereasy"}, "split");
+RunTest("Double 10 against dealer low card", [7,3], 4, 1, true, {numberOfDecks:4, strategyComplexity: "bjc-supereasy"}, "double");
+RunTest("Hit soft 17 or less", [1,4], 4, 1, true, {numberOfDecks:2, strategyComplexity: "bjc-supereasy"}, "hit");
+RunTest("Stand on 12+ if dealer low card", [10,3], 6, 1, true, {numberOfDecks:4, strategyComplexity: "bjc-supereasy"}, "stand");
+RunTest("Hit until 17+ if dealer high card", [10,3], 1, 1, true, {numberOfDecks:6, strategyComplexity: "bjc-supereasy"}, "hit");
+
+// blackjackcalculation.com Simple strategy
+RunTest("Surrender hard 16 against dealer 10",[10,6], 10, 1, true, {numberOfDecks:4, surrender: "early", strategyComplexity: "bjc-simple"}, "surrender");
+RunTest("Split pair of 3s against dealer low card", [3,3], 6, 1, true, {numberOfDecks:2, strategyComplexity: "bjc-simple"}, "split");
+RunTest("Double 10 against dealer 2-9", [2,8], 8, 1, true, {numberOfDecks:2, strategyComplexity: "bjc-great"}, "double");
+RunTest("Double A6 or A7 against dealer low card", [1,7], 4, 1, true, {numberOfDecks:6, strategyComplexity: "bjc-simple"}, "double");
+
+// blackjackcalculation.com Great strategy
+RunTest("Hit soft 18 against dealer 9-A", [1,7], 10, 1, true, {numberOfDecks:4, strategyComplexity: "bjc-great"}, "hit");
+RunTest("Hit on 12 if dealer 2 or 3", [5,7], 3, 1, true, {numberOfDecks:4, strategyComplexity: "bjc-great"}, "hit");
+RunTest("Double A2-A5 against dealer 5,6", [1,4], 6, 1, true, {numberOfDecks:6, strategyComplexity: "bjc-great"}, "double");
+
 // Easy strategy
 RunTest("Split pair of 7s against dealer 10 single deck", [7,7], 10, 1, true, {numberOfDecks:1, strategyComplexity: "easy"}, "split");
 RunTest("Double 11 against Ace multi-deck stand soft 17", [7,4], 1, 1, true, {numberOfDecks:6, hitSoft17: false, strategyComplexity: "easy"}, "double");
